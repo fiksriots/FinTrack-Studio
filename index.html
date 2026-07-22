@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinTrack Studio - Catatan Keuangan Modern</title>
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Ambient Glow Backgrounds -->
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+
+  <!-- Mobile Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="appSidebar">
+      <div class="brand-header">
+        <div class="brand-brand-wrapper">
+          <div class="brand-icon">
+            <i class="fa-solid fa-wallet"></i>
+          </div>
+          <div class="brand-text">
+            <h2>FinTrack</h2>
+            <span>Studio Keuangan</span>
+          </div>
+        </div>
+      </div>
+
+      <ul class="nav-menu">
+        <li class="nav-item active" data-tab="dashboard">
+          <button type="button" title="Dashboard">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Dashboard</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="transactions">
+          <button type="button" title="Transaksi">
+            <i class="fa-solid fa-receipt"></i>
+            <span>Transaksi</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="calendar">
+          <button type="button" title="Kalender">
+            <i class="fa-solid fa-calendar-days"></i>
+            <span>Kalender</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="goals">
+          <button type="button" title="Target Impian">
+            <i class="fa-solid fa-piggy-bank"></i>
+            <span>Target Impian</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="debts">
+          <button type="button" title="Hutang Piutang">
+            <i class="fa-solid fa-handshake"></i>
+            <span>Hutang Piutang</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="recurring">
+          <button type="button" title="Transaksi Rutin">
+            <i class="fa-solid fa-rotate"></i>
+            <span>Transaksi Rutin</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="budgets">
+          <button type="button" title="Anggaran & Budget">
+            <i class="fa-solid fa-bullseye"></i>
+            <span>Anggaran & Budget</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="calculators">
+          <button type="button" title="Kalkulator">
+            <i class="fa-solid fa-calculator"></i>
+            <span>Kalkulator</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="categories">
+          <button type="button" title="Kategori & Sub">
+            <i class="fa-solid fa-folder-tree"></i>
+            <span>Kategori & Sub</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="wallets">
+          <button type="button" title="Dompet & Rekening">
+            <i class="fa-solid fa-building-columns"></i>
+            <span>Dompet & Rekening</span>
+          </button>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button type="button" class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()">
+          <span id="themeLabel"><i class="fa-solid fa-moon"></i> Mode Gelap</span>
+          <i class="fa-solid fa-circle-half-stroke"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <main class="main-wrapper">
+      <!-- Top Header (Main Page Navbar Title) -->
+      <header class="top-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <button type="button" class="btn-icon mobile-menu-btn" id="mobileMenuBtn" title="Buka / Tutup Menu Sidebar" onclick="(function(){var s=document.getElementById('appSidebar'),o=document.getElementById('sidebarOverlay');if(window.innerWidth>=1024){s.classList.toggle('collapsed')}else{s.classList.toggle('mobile-open');o.classList.toggle('active')}})();">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="page-title">
+            <h1 id="pageTitleHeading">Dashboard Keuangan</h1>
+            <p id="pageSubTitle">Pantau ringkasan saldo, statistik, dan analisis kesehatan keuangan Anda</p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button type="button" class="btn-secondary" id="privacyToggleBtn" onclick="togglePrivacyMode()" title="Sembunyikan / Tampilkan Saldo">
+            <i class="fa-solid fa-eye" id="privacyIcon"></i> <span id="privacyLabel" class="btn-text">Privasi</span>
+          </button>
+          <button type="button" class="btn-secondary" id="openBackupModalBtn" onclick="openModal('backupModal')">
+            <i class="fa-solid fa-database"></i> <span class="btn-text">Database & Backup</span>
+          </button>
+          <button type="button" class="btn-primary" id="openAddTransactionBtn" onclick="openTxModal()">
+            <i class="fa-solid fa-plus"></i> <span>Tambah Transaksi</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- TAB 1: DASHBOARD OVERVIEW -->
+      <section id="dashboard" class="tab-content active">
+        <!-- Smart Financial Alerts Container -->
+        <div id="smartAlertsContainer"></div>
+
+        <!-- Summary Cards Grid -->
+        <div class="summary-grid">
+          <div class="card-summary">
+            <div class="card-header-flex">
+              <span class="card-title">Total Saldo Bersih</span>
+              <div class="icon-badge balance"><i class="fa-solid fa-wallet"></i></div>
+            </div>
+            <div class="card-amount privacy-target" id="totalBalanceDisplay">Rp 0</div>
+            <div class="card-subtext"><i class="fa-solid fa-shield"></i> Terakumulasi dari semua dompet</div>
+          </div>
+
+          <div class="card-summary">
+            <div class="card-header-flex">
+              <span class="card-title">Pemasukan (Bulan Ini)</span>
+              <div class="icon-badge income"><i class="fa-solid fa-arrow-trend-up"></i></div>
+            </div>
+            <div class="card-amount privacy-target" id="totalIncomeDisplay">Rp 0</div>
+            <div class="card-subtext"><i class="fa-solid fa-circle-check"></i> Total uang masuk</div>
+          </div>
+
+          <div class="card-summary">
+            <div class="card-header-flex">
+              <span class="card-title">Pengeluaran (Bulan Ini)</span>
+              <div class="icon-badge expense"><i class="fa-solid fa-arrow-trend-down"></i></div>
+            </div>
+            <div class="card-amount privacy-target" id="totalExpenseDisplay">Rp 0</div>
+            <div class="card-subtext"><i class="fa-solid fa-chart-line"></i> Total uang keluar</div>
+          </div>
+
+          <div class="card-summary">
+            <div class="card-header-flex">
+              <span class="card-title">Net Cashflow</span>
+              <div class="icon-badge net"><i class="fa-solid fa-scale-balanced"></i></div>
+            </div>
+            <div class="card-amount privacy-target" id="netFlowDisplay">Rp 0</div>
+            <div class="card-subtext" id="netFlowStatus"><i class="fa-solid fa-circle-info"></i> Selisih Pemasukan & Pengeluaran</div>
+          </div>
+        </div>
+
+        <!-- Month-over-Month Comparison & Health Card Grid -->
+        <div class="dashboard-widgets-grid">
+          <!-- Month Comparison Card -->
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3><i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Perbandingan Bulan Lalu vs Bulan Ini</h3>
+            </div>
+            <div id="monthComparisonContainer"></div>
+          </div>
+
+          <!-- Financial Health Card -->
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3><i class="fa-solid fa-heart-pulse" style="color: #ec4899;"></i> Kesehatan Keuangan (50/30/20)</h3>
+              <span class="card-subtext" id="healthScoreBadge">Skor: 85/100</span>
+            </div>
+            <div class="health-grid">
+              <div class="health-item">
+                <div class="health-item-label">
+                  <span>Kebutuhan Pokok (<= 50%)</span>
+                  <span id="needsPercentText">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="needsProgressBar" style="width: 0%; background: var(--primary);"></div>
+                </div>
+              </div>
+
+              <div class="health-item">
+                <div class="health-item-label">
+                  <span>Gaya Hidup (<= 30%)</span>
+                  <span id="wantsPercentText">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="wantsProgressBar" style="width: 0%; background: var(--warning);"></div>
+                </div>
+              </div>
+
+              <div class="health-item">
+                <div class="health-item-label">
+                  <span>Tabungan & Investasi (>= 20%)</span>
+                  <span id="savingsPercentText">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="savingsProgressBar" style="width: 0%; background: var(--income);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Charts & Recent Grid -->
+        <div class="dashboard-grid">
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3><i class="fa-solid fa-chart-area"></i> Tren Keuangan Bulanan</h3>
+              <span class="card-subtext">Pemasukan vs Pengeluaran</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="monthlyTrendChart"></canvas>
+            </div>
+          </div>
+
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3><i class="fa-solid fa-chart-pie"></i> Pengeluaran per Kategori</h3>
+            </div>
+            <div class="chart-container">
+              <canvas id="categoryPieChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Transaksi Terakhir</h3>
+            <button type="button" class="btn-secondary" id="viewAllTxBtn" onclick="document.querySelector('[data-tab=transactions]').click()">Lihat Semua</button>
+          </div>
+          <div class="transaction-list" id="dashboardTxList"></div>
+        </div>
+      </section>
+
+      <!-- TAB 2: TRANSACTIONS MANAGEMENT -->
+      <section id="transactions" class="tab-content">
+        <div class="filter-bar">
+          <div class="filter-group main-filters">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="searchInput" placeholder="Cari catatan, kategori, dompet, tag...">
+            </div>
+            <select id="typeFilter" class="select-custom">
+              <option value="all">Semua Tipe</option>
+              <option value="income">Pemasukan (+)</option>
+              <option value="expense">Pengeluaran (-)</option>
+            </select>
+            <select id="categoryFilter" class="select-custom">
+              <option value="all">Semua Kategori Utama</option>
+            </select>
+            <select id="dateRangeFilter" class="select-custom">
+              <option value="all">Semua Waktu</option>
+              <option value="this-month" selected>Bulan Ini</option>
+              <option value="last-month">Bulan Lalu</option>
+              <option value="this-year">Tahun Ini</option>
+            </select>
+            <button type="button" class="btn-secondary" id="resetFiltersBtn" onclick="(function(){var s=document.getElementById('searchInput');var t=document.getElementById('typeFilter');var c=document.getElementById('categoryFilter');var d=document.getElementById('dateRangeFilter');if(s)s.value='';if(t)t.value='all';if(c)c.value='all';if(d)d.value='this-month';renderTransactionsList();})()">
+              <i class="fa-solid fa-arrow-rotate-left"></i> Reset Filter
+            </button>
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <div class="panel-header" style="flex-wrap: wrap; gap: 14px;">
+            <div>
+              <h3><i class="fa-solid fa-list-check"></i> Daftar Semua Transaksi</h3>
+              <span class="card-subtext" id="txCountBadge">0 Transaksi Ditemukan</span>
+            </div>
+
+            <!-- Total Income & Expense Real-time Badges -->
+            <div class="tx-summary-pills" id="txSummaryPills" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+              <div class="summary-pill income" style="background: var(--income-bg); border: 1px solid var(--income-border); color: var(--income); padding: 8px 14px; border-radius: var(--radius-md); font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-arrow-trend-up"></i> Pemasukan: <span id="filteredIncomeTotal" class="privacy-target">Rp 0</span>
+              </div>
+              <div class="summary-pill expense" style="background: var(--expense-bg); border: 1px solid var(--expense-border); color: var(--expense); padding: 8px 14px; border-radius: var(--radius-md); font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-arrow-trend-down"></i> Pengeluaran: <span id="filteredExpenseTotal" class="privacy-target">Rp 0</span>
+              </div>
+            </div>
+          </div>
+          <div class="transaction-list" id="allTransactionsList"></div>
+        </div>
+      </section>
+
+      <!-- TAB 3: FINANCIAL CALENDAR VIEW -->
+      <section id="calendar" class="tab-content">
+        <div class="card-panel">
+          <div class="panel-header calendar-header-flex">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <h3><i class="fa-solid fa-calendar-days" style="color: var(--primary);"></i> Kalender Keuangan Bulanan</h3>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn-icon" id="prevMonthBtn" onclick="calendarCurrentDate.setMonth(calendarCurrentDate.getMonth()-1);renderCalendarView()"><i class="fa-solid fa-chevron-left"></i></button>
+                <span id="calendarMonthTitle" style="font-weight: 800; font-size: 1rem; min-width: 130px; text-align: center;">-</span>
+                <button type="button" class="btn-icon" id="nextMonthBtn" onclick="calendarCurrentDate.setMonth(calendarCurrentDate.getMonth()+1);renderCalendarView()"><i class="fa-solid fa-chevron-right"></i></button>
+              </div>
+            </div>
+            <span class="card-subtext">Klik tanggal untuk melihat ringkasan harian</span>
+          </div>
+
+          <div class="calendar-wrapper">
+            <div class="calendar-days-header">
+              <div>Minggu</div><div>Senin</div><div>Selasa</div><div>Rabu</div><div>Kamis</div><div>Jumat</div><div>Sabtu</div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: TARGET TABUNGAN & IMPIAN -->
+      <section id="goals" class="tab-content">
+        <div class="sub-tab-actions" style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
+          <button type="button" class="btn-primary" id="openAddGoalBtn" onclick="openModal('goalModal')">
+            <i class="fa-solid fa-plus"></i> Buat Target Baru
+          </button>
+        </div>
+        <div class="goal-grid" id="goalGrid"></div>
+      </section>
+
+      <!-- TAB 5: DEBT & LOAN TRACKER -->
+      <section id="debts" class="tab-content">
+        <div class="sub-tab-actions" style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
+          <button type="button" class="btn-primary" id="openAddDebtBtn" onclick="window.openDebtModal()">
+            <i class="fa-solid fa-plus"></i> Catat Hutang / Piutang
+          </button>
+        </div>
+        <div class="debt-grid" id="debtGrid"></div>
+      </section>
+
+      <!-- TAB 6: RECURRING TRANSACTIONS -->
+      <section id="recurring" class="tab-content">
+        <div class="sub-tab-actions" style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
+          <button type="button" class="btn-primary" id="openAddRecurringBtn" onclick="openRecurringModal()">
+            <i class="fa-solid fa-plus"></i> Buat Transaksi Rutin
+          </button>
+        </div>
+        <div class="recurring-grid" id="recurringGrid"></div>
+      </section>
+
+      <!-- TAB 7: FINANCIAL CALCULATORS -->
+      <section id="calculators" class="tab-content">
+        <div class="calculators-grid">
+          <!-- 1. Zakat Maal -->
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3><i class="fa-solid fa-coins" style="color: var(--warning);"></i> Kalkulator Zakat Maal & Keuangan</h3>
+            </div>
+            <form id="zakatForm">
+              <div class="form-group">
+                <label for="zakatAssetInput">Total Aset / Harta Tersimpan (1 Tahun)</label>
+                <input type="text" inputmode="numeric" id="zakatAssetInput" class="form-control currency-input" placeholder="Contoh: 100.000.000" required>
+              </div>
+              <div class="form-group">
+                <label for="zakatGoldPriceInput">Harga Emas Saat Ini (Rp / Gram)</label>
+                <input type="text" inputmode="numeric" id="zakatGoldPriceInput" class="form-control currency-input" value="1.100.000" required>
+              </div>
+              <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Hitung Zakat</button>
+            </form>
+            <div id="zakatResultCard" style="margin-top: 20px; display: none; padding: 16px; background: var(--bg-glass); border-radius: var(--radius-md); border: 1px solid var(--border-color);"></div>
+          </div>
+
+          <!-- 2. KPR & Simulasi Kredit -->
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3><i class="fa-solid fa-calculator" style="color: var(--primary);"></i> Simulasi Cicilan KPR / Kredit Pokok</h3>
+            </div>
+            <form id="kprForm">
+              <div class="form-group">
+                <label for="kprPrincipalInput">Jumlah Pinjaman Pokok (Rp)</label>
+                <input type="text" inputmode="numeric" id="kprPrincipalInput" class="form-control currency-input" placeholder="Contoh: 250.000.000" required>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="kprRateInput">Bunga pertahun (%)</label>
+                  <input type="number" step="0.1" id="kprRateInput" class="form-control" placeholder="Contoh: 8.5" required>
+                </div>
+                <div class="form-group">
+                  <label for="kprTenureInput">Tenor (Tahun)</label>
+                  <input type="number" id="kprTenureInput" class="form-control" placeholder="Contoh: 10" required>
+                </div>
+              </div>
+              <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Hitung Cicilan KPR</button>
+            </form>
+            <div id="kprResultCard" style="margin-top: 20px; display: none; padding: 16px; background: var(--bg-glass); border-radius: var(--radius-md); border: 1px solid var(--border-color);"></div>
+          </div>
+
+          <!-- 3. Kalkulator Pinjol (Pinjaman Online) -->
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3><i class="fa-solid fa-mobile-screen-button" style="color: #f43f5e;"></i> Kalkulator Pinjaman Online (Pinjol)</h3>
+            </div>
+            <form id="pinjolForm">
+              <div class="form-group">
+                <label for="pinjolPrincipalInput">Nominal Pengajuan Pinjaman (Rp)</label>
+                <input type="text" inputmode="numeric" id="pinjolPrincipalInput" class="form-control currency-input" placeholder="Contoh: 3.000.000" required>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="pinjolTenureInput">Tenor Pinjaman</label>
+                  <input type="number" id="pinjolTenureInput" class="form-control" placeholder="Contoh: 30" required>
+                </div>
+                <div class="form-group">
+                  <label for="pinjolTenureUnit">Satuan Tenor</label>
+                  <select id="pinjolTenureUnit" class="form-control">
+                    <option value="hari">Hari</option>
+                    <option value="bulan">Bulan</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="pinjolRateInput">Bunga (% Per Periode)</label>
+                  <input type="number" step="0.01" id="pinjolRateInput" class="form-control" placeholder="Contoh: 0.3 (per hari) atau 3.5" required>
+                </div>
+                <div class="form-group">
+                  <label for="pinjolAdminFeeInput">Biaya Admin / Layanan (%)</label>
+                  <input type="number" step="0.1" id="pinjolAdminFeeInput" class="form-control" value="5">
+                </div>
+              </div>
+              <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; background: linear-gradient(135deg, #f43f5e, #e11d48);">Hitung Pelunasan Pinjol</button>
+            </form>
+            <div id="pinjolResultCard" style="margin-top: 20px; display: none; padding: 16px; background: var(--bg-glass); border-radius: var(--radius-md); border: 1px solid var(--border-color);"></div>
+          </div>
+
+          <!-- 4. Kalkulator Kartu Kredit -->
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3><i class="fa-solid fa-credit-card" style="color: #a855f7;"></i> Kalkulator Simulasi Kartu Kredit</h3>
+            </div>
+            <form id="ccForm">
+              <div class="form-group">
+                <label for="ccBalanceInput">Total Tagihan Kartu Kredit (Rp)</label>
+                <input type="text" inputmode="numeric" id="ccBalanceInput" class="form-control currency-input" placeholder="Contoh: 10.000.000" required>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="ccRateInput">Bunga Bulanan (%)</label>
+                  <input type="number" step="0.01" id="ccRateInput" class="form-control" value="1.75" required>
+                </div>
+                <div class="form-group">
+                  <label for="ccMinPayPercentInput">Minimum Payment (%)</label>
+                  <input type="number" step="1" id="ccMinPayPercentInput" class="form-control" value="5" required>
+                </div>
+              </div>
+              <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; background: linear-gradient(135deg, #a855f7, #9333ea);">Simulasi Minimum Payment</button>
+            </form>
+            <div id="ccResultCard" style="margin-top: 20px; display: none; padding: 16px; background: var(--bg-glass); border-radius: var(--radius-md); border: 1px solid var(--border-color);"></div>
+          </div>
+
+          <!-- 5. Kalkulator Kredit Motor / Kendaraan -->
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3><i class="fa-solid fa-motorcycle" style="color: #3b82f6;"></i> Kalkulator Kredit Motor & Kendaraan</h3>
+            </div>
+            <form id="vehicleForm">
+              <div class="form-group">
+                <label for="vehiclePriceInput">Harga OTR Kendaraan (Rp)</label>
+                <input type="text" inputmode="numeric" id="vehiclePriceInput" class="form-control currency-input" placeholder="Contoh: 24.500.000" required>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="vehicleDpPercentInput">Uang Muka / DP (%)</label>
+                  <input type="number" step="1" id="vehicleDpPercentInput" class="form-control" value="20" required>
+                </div>
+                <div class="form-group">
+                  <label for="vehicleTenureInput">Tenor (Tahun)</label>
+                  <select id="vehicleTenureInput" class="form-control">
+                    <option value="1">1 Tahun (12 Bulan)</option>
+                    <option value="2">2 Tahun (24 Bulan)</option>
+                    <option value="3" selected>3 Tahun (36 Bulan)</option>
+                    <option value="4">4 Tahun (48 Bulan)</option>
+                    <option value="5">5 Tahun (60 Bulan)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="vehicleInterestInput">Bunga Flat Per Tahun (%)</label>
+                <input type="number" step="0.1" id="vehicleInterestInput" class="form-control" value="8" required>
+              </div>
+              <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; background: linear-gradient(135deg, #3b82f6, #2563eb);">Hitung Cicilan Kendaraan</button>
+            </form>
+            <div id="vehicleResultCard" style="margin-top: 20px; display: none; padding: 16px; background: var(--bg-glass); border-radius: var(--radius-md); border: 1px solid var(--border-color);"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 8: BUDGETS -->
+      <section id="budgets" class="tab-content">
+        <!-- Budget Top Summary Bar -->
+        <div class="card-panel" style="margin-bottom: 20px;" id="budgetSummaryPanel"></div>
+
+        <div class="sub-tab-actions" style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
+          <button type="button" class="btn-primary" id="openAddBudgetBtn" onclick="window.openBudgetModal()">
+            <i class="fa-solid fa-plus"></i> Set Anggaran Baru
+          </button>
+        </div>
+        <div class="budget-grid" id="budgetGrid"></div>
+      </section>
+
+      <!-- TAB 9: CATEGORIES & SUB-CATEGORIES -->
+      <section id="categories" class="tab-content">
+        <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div class="filter-group" style="width: auto;">
+            <select id="catTypeFilter" class="select-custom" style="font-weight: 700;">
+              <option value="all">📁 Semua Tipe Kategori</option>
+              <option value="expense">🔴 Pengeluaran (-)</option>
+              <option value="income">🟢 Pemasukan (+)</option>
+            </select>
+          </div>
+          <button type="button" class="btn-primary" id="openAddCategoryModalBtn" onclick="openCatModal()">
+            <i class="fa-solid fa-folder-plus"></i> Tambah Kategori / Sub-Kategori
+          </button>
+        </div>
+        <div class="category-manager-grid" id="categoryManagerGrid"></div>
+      </section>
+
+      <!-- TAB 10: WALLETS -->
+      <section id="wallets" class="tab-content">
+        <div class="sub-tab-actions" style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+          <button type="button" class="btn-secondary" id="openTransferModalBtn" onclick="openTransferModal()">
+            <i class="fa-solid fa-right-left"></i> Transfer Antar Dompet
+          </button>
+          <button type="button" class="btn-primary" id="openAddWalletBtn" onclick="openModal('walletModal')">
+            <i class="fa-solid fa-plus"></i> Tambah Dompet
+          </button>
+        </div>
+        <div class="wallet-grid" id="walletGrid"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODALS -->
+  <div class="modal-overlay" id="transactionModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="modalTxTitle">Tambah Transaksi</h3>
+        <button type="button" class="close-btn" id="closeTxModalBtn" onclick="closeModal('transactionModal')">&times;</button>
+      </div>
+      <form id="transactionForm">
+        <input type="hidden" id="txId">
+
+        <div class="type-selector">
+          <button type="button" class="type-btn active expense" id="typeExpenseBtn"><i class="fa-solid fa-arrow-down"></i> Pengeluaran</button>
+          <button type="button" class="type-btn income" id="typeIncomeBtn"><i class="fa-solid fa-arrow-up"></i> Pemasukan</button>
+        </div>
+
+        <div class="form-row-2" style="grid-template-columns: 2fr 1fr;">
+          <div class="form-group">
+            <label for="txAmount">Jumlah Nominal</label>
+            <input type="text" inputmode="numeric" id="txAmount" class="form-control currency-input" placeholder="Contoh: 50.000" required>
+          </div>
+          <div class="form-group">
+            <label for="txCurrency">Mata Uang</label>
+            <select id="txCurrency" class="form-control">
+              <option value="IDR">IDR (Rp)</option>
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="SGD">SGD ($)</option>
+              <option value="JPY">JPY (¥)</option>
+              <option value="SAR">SAR (﷼)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="txCategory">Kategori Utama</label>
+            <select id="txCategory" class="form-control" required></select>
+          </div>
+
+          <div class="form-group">
+            <label for="txSubCategory">Sub-Kategori</label>
+            <select id="txSubCategory" class="form-control" required></select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="txWallet">Dompet / Akun</label>
+          <select id="txWallet" class="form-control" required></select>
+        </div>
+
+        <div class="form-group">
+          <label for="txDate">Tanggal</label>
+          <input type="date" id="txDate" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label for="txNote">Catatan / Keterangan</label>
+          <input type="text" id="txNote" class="form-control" placeholder="Contoh: Makan Siang Nasi Padang">
+        </div>
+
+        <div class="form-group">
+          <label for="txTags">Tag / Label (#Hashtag)</label>
+          <input type="text" id="txTags" class="form-control" placeholder="Contoh: #LiburanBali #ProjectX">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelTxBtn" onclick="closeModal('transactionModal')">Batal</button>
+          <button type="submit" class="btn-primary">Simpan Transaksi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="goalModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Buat Target Tabungan / Impian</h3>
+        <button type="button" class="close-btn" id="closeGoalModalBtn" onclick="closeModal('goalModal')">&times;</button>
+      </div>
+      <form id="goalForm">
+        <div class="form-group">
+          <label for="goalTitleInput">Nama Target Impian</label>
+          <input type="text" id="goalTitleInput" class="form-control" placeholder="Contoh: Beli Laptop Baru / Dana Darurat" required>
+        </div>
+        <div class="form-group">
+          <label for="goalTargetAmountInput">Target Jumlah (Rp)</label>
+          <input type="text" inputmode="numeric" id="goalTargetAmountInput" class="form-control currency-input" placeholder="Contoh: 15.000.000" required>
+        </div>
+        <div class="form-group">
+          <label for="goalCurrentAmountInput">Saldo Awal Terkumpul (Rp)</label>
+          <input type="text" inputmode="numeric" id="goalCurrentAmountInput" class="form-control currency-input" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label for="goalTargetDateInput">Target Tanggal Capaian</label>
+          <input type="date" id="goalTargetDateInput" class="form-control" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelGoalBtn" onclick="closeModal('goalModal')">Batal</button>
+          <button type="submit" class="btn-primary">Simpan Target</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ENHANCED GOAL DEPOSIT MODAL (PEMILIHAN DOMPET SUMBER) -->
+  <div class="modal-overlay" id="goalDepositModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-piggy-bank" style="color: var(--income);"></i> Setor Tabungan Impian</h3>
+        <button type="button" class="close-btn" id="closeGoalDepositModalBtn" onclick="closeModal('goalDepositModal')">&times;</button>
+      </div>
+      <form id="goalDepositForm">
+        <input type="hidden" id="depositGoalId">
+        <div class="form-group">
+          <label for="depositAmountInput">Jumlah Yang Ditabung (Rp)</label>
+          <input type="text" inputmode="numeric" id="depositAmountInput" class="form-control currency-input" placeholder="Contoh: 500.000" required>
+        </div>
+        <div class="form-group">
+          <label for="depositWalletSelect">Sumber Dompet / Rekening</label>
+          <select id="depositWalletSelect" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label for="depositDateInput">Tanggal Setoran</label>
+          <input type="date" id="depositDateInput" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="depositNoteInput">Catatan Keterangan (Opsional)</label>
+          <input type="text" id="depositNoteInput" class="form-control" placeholder="Contoh: Setoran bulanan dari sisa gaji">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelGoalDepositBtn" onclick="closeModal('goalDepositModal')">Batal</button>
+          <button type="submit" class="btn-primary">Setor Tabungan & Potong Dompet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- GOAL WITHDRAWAL MODAL (PENCAIRAN / TARIK TABUNGAN) -->
+  <div class="modal-overlay" id="goalWithdrawModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-hand-holding-dollar" style="color: var(--expense);"></i> Tarik Tabungan Impian</h3>
+        <button type="button" class="close-btn" id="closeGoalWithdrawModalBtn" onclick="closeModal('goalWithdrawModal')">&times;</button>
+      </div>
+      <form id="goalWithdrawForm">
+        <input type="hidden" id="withdrawGoalId">
+        <div class="form-group">
+          <label for="withdrawAmountInput">Jumlah Yang Ditarik (Rp)</label>
+          <input type="text" inputmode="numeric" id="withdrawAmountInput" class="form-control currency-input" placeholder="Contoh: 1.000.000" required>
+        </div>
+        <div class="form-group">
+          <label for="withdrawWalletSelect">Transfer Ke Dompet / Rekening Tujuan</label>
+          <select id="withdrawWalletSelect" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label for="withdrawDateInput">Tanggal Penarikan</label>
+          <input type="date" id="withdrawDateInput" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="withdrawNoteInput">Catatan Keterangan (Opsional)</label>
+          <input type="text" id="withdrawNoteInput" class="form-control" placeholder="Contoh: Keperluan darurat / Pembelian barang">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelGoalWithdrawBtn" onclick="closeModal('goalWithdrawModal')">Batal</button>
+          <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #f43f5e, #e11d48);">Tarik & Tambah ke Dompet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- RIWAYAT NABUNG MODAL -->
+  <div class="modal-overlay" id="goalHistoryModal">
+    <div class="modal-container" style="max-width: 580px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="historyGoalTitle">Riwayat Menabung</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted);" id="historyGoalSub">Catatan histori setoran tabungan impian Anda</p>
+        </div>
+        <button type="button" class="close-btn" id="closeGoalHistoryModalBtn" onclick="closeModal('goalHistoryModal')">&times;</button>
+      </div>
+      <div class="transaction-list" id="goalHistoryList" style="max-height: 380px; overflow-y: auto;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="cancelGoalHistoryBtn" onclick="closeModal('goalHistoryModal')">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENHANCED DEBT MODAL WITH WALLET SELECTION -->
+  <div class="modal-overlay" id="debtModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-handshake" style="color: var(--warning);"></i> Catat Hutang / Piutang</h3>
+        <button type="button" class="close-btn" id="closeDebtModalBtn" onclick="closeModal('debtModal')">&times;</button>
+      </div>
+      <form id="debtForm">
+        <div class="form-group">
+          <label for="debtTypeSelect">Tipe Catatan</label>
+          <select id="debtTypeSelect" class="form-control" required>
+            <option value="hutang">Hutang (Saya Meminjam ke Orang Lain)</option>
+            <option value="piutang">Piutang (Orang Lain Meminjam ke Saya)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="debtPersonInput">Nama Pihak / Orang</label>
+          <input type="text" id="debtPersonInput" class="form-control" placeholder="Contoh: Budi / Bank Mandiri" required>
+        </div>
+        <div class="form-group">
+          <label for="debtAmountInput">Total Jumlah Pinjaman (Rp)</label>
+          <input type="text" inputmode="numeric" id="debtAmountInput" class="form-control currency-input" placeholder="Contoh: 1.000.000" required>
+        </div>
+        <div class="form-group">
+          <label for="debtWalletSelect">Dompet / Rekening Transaksi</label>
+          <select id="debtWalletSelect" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label for="debtDueDateInput">Tanggal Jatuh Tempo</label>
+          <input type="date" id="debtDueDateInput" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="debtNoteInput">Catatan Keterangan</label>
+          <input type="text" id="debtNoteInput" class="form-control" placeholder="Contoh: Pinjaman Modal Usaha">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelDebtBtn" onclick="closeModal('debtModal')">Batal</button>
+          <button type="submit" class="btn-primary">Simpan & Update Dompet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ENHANCED DEBT PAY MODAL WITH WALLET SELECTION -->
+  <div class="modal-overlay" id="debtPayModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-money-bill-transfer" style="color: var(--income);"></i> Bayar / Cicil Pelunasan</h3>
+        <button type="button" class="close-btn" id="closeDebtPayModalBtn" onclick="closeModal('debtPayModal')">&times;</button>
+      </div>
+      <form id="debtPayForm">
+        <input type="hidden" id="payDebtId">
+        <div class="form-group">
+          <label for="payAmountInput">Jumlah Yang Dibayar (Rp)</label>
+          <input type="text" inputmode="numeric" id="payAmountInput" class="form-control currency-input" placeholder="Contoh: 250.000" required>
+        </div>
+        <div class="form-group">
+          <label for="payWalletSelect">Dompet / Rekening Pembayaran</label>
+          <select id="payWalletSelect" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label for="payDateInput">Tanggal Pembayaran</label>
+          <input type="date" id="payDateInput" class="form-control" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelDebtPayBtn" onclick="closeModal('debtPayModal')">Batal</button>
+          <button type="submit" class="btn-primary">Konfirmasi & Update Dompet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DEBT HISTORY MODAL -->
+  <div class="modal-overlay" id="debtHistoryModal">
+    <div class="modal-container" style="max-width: 580px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="historyDebtTitle">Riwayat Cicilan & Pelunasan</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted);" id="historyDebtSub">Catatan histori pembayaran pinjaman / piutang</p>
+        </div>
+        <button type="button" class="close-btn" id="closeDebtHistoryModalBtn" onclick="closeModal('debtHistoryModal')">&times;</button>
+      </div>
+      <div class="transaction-list" id="debtHistoryList" style="max-height: 380px; overflow-y: auto;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="cancelDebtHistoryBtn" onclick="closeModal('debtHistoryModal')">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECURRING TRANSACTIONS MODAL -->
+  <div class="modal-overlay" id="recurringModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Buat Transaksi Rutin</h3>
+        <button type="button" class="close-btn" id="closeRecurringModalBtn" onclick="closeModal('recurringModal')">&times;</button>
+      </div>
+      <form id="recurringForm">
+        <div class="form-group">
+          <label for="recTypeSelect">Tipe Transaksi</label>
+          <select id="recTypeSelect" class="form-control" required>
+            <option value="expense">Pengeluaran (-)</option>
+            <option value="income">Pemasukan (+)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="recTitleInput">Nama Transaksi Rutin</label>
+          <input type="text" id="recTitleInput" class="form-control" placeholder="Contoh: Langganan Netflix / Tagihan Wi-Fi" required>
+        </div>
+        <div class="form-group">
+          <label for="recAmountInput">Jumlah (Rp)</label>
+          <input type="text" inputmode="numeric" id="recAmountInput" class="form-control currency-input" placeholder="Contoh: 186.000" required>
+        </div>
+        <div class="form-group">
+          <label for="recCategorySelect">Kategori Utama</label>
+          <select id="recCategorySelect" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label for="recWalletSelect">Dompet / Akun</label>
+          <select id="recWalletSelect" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label for="recFrequencySelect">Frekuensi Rutin</label>
+          <select id="recFrequencySelect" class="form-control" required>
+            <option value="Bulanan">Setiap Bulan</option>
+            <option value="Mingguan">Setiap Minggu</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelRecurringBtn" onclick="closeModal('recurringModal')">Batal</button>
+          <button type="submit" class="btn-primary">Simpan Transaksi Rutin</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- RECURRING HISTORY MODAL -->
+  <div class="modal-overlay" id="recurringHistoryModal">
+    <div class="modal-container" style="max-width: 580px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="historyRecurringTitle">Riwayat Transaksi Rutin</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted);" id="historyRecurringSub">Histori pencatatan & eksekusi rutin</p>
+        </div>
+        <button type="button" class="close-btn" id="closeRecurringHistoryModalBtn" onclick="closeModal('recurringHistoryModal')">&times;</button>
+      </div>
+      <div class="transaction-list" id="recurringHistoryList" style="max-height: 380px; overflow-y: auto;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="cancelRecurringHistoryBtn" onclick="closeModal('recurringHistoryModal')">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUDGET MODAL (MULTI-CATEGORY SUPPORT & EDIT) -->
+  <div class="modal-overlay" id="budgetModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="budgetModalTitle">Set Anggaran Baru</h3>
+        <button type="button" class="close-btn" id="closeBudgetModalBtn" onclick="closeModal('budgetModal')">&times;</button>
+      </div>
+      <form id="budgetForm">
+        <input type="hidden" id="budgetId">
+        <div class="form-group">
+          <label for="budgetNameInput">Nama / Label Anggaran (Opsional)</label>
+          <input type="text" id="budgetNameInput" class="form-control" placeholder="Contoh: Anggaran Makan & Belanja">
+        </div>
+        <div class="form-group">
+          <label>Pilih Kategori Pengeluaran (Bisa Lebih Dari 1)</label>
+          <div id="budgetCategoryCheckboxes" style="max-height: 180px; overflow-y: auto; padding: 12px; background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; flex-direction: column; gap: 8px;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="budgetLimitInput">Batas Anggaran Bulanan (Rp)</label>
+          <input type="text" inputmode="numeric" id="budgetLimitInput" class="form-control currency-input" placeholder="Contoh: 1.500.000" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelBudgetBtn" onclick="closeModal('budgetModal')">Batal</button>
+          <button type="submit" class="btn-primary" id="saveBudgetBtn">Simpan Anggaran</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- BUDGET CATEGORIES PREVIEW POPUP MODAL -->
+  <div class="modal-overlay" id="budgetCategoriesPreviewModal">
+    <div class="modal-container" style="max-width: 480px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="previewBudgetNameTitle">Kategori Dalam Anggaran</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted);" id="previewBudgetNameSub">Daftar kategori pengeluaran yang terhubung ke anggaran ini</p>
+        </div>
+        <button type="button" class="close-btn" id="closeBudgetCategoriesPreviewModalBtn" onclick="closeModal('budgetCategoriesPreviewModal')">&times;</button>
+      </div>
+      <div id="previewBudgetCategoriesList" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="cancelBudgetCategoriesPreviewBtn" onclick="closeModal('budgetCategoriesPreviewModal')">Tutup</button>
+        <button type="button" class="btn-primary" id="editBudgetFromPreviewBtn"><i class="fa-solid fa-pen-to-square"></i> Edit Anggaran Ini</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUDGET DETAIL MODAL (TRANSAKSI KATEGORI ANGGARAN) -->
+  <div class="modal-overlay" id="budgetDetailModal">
+    <div class="modal-container" style="max-width: 580px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="detailBudgetCategoryTitle">Rincian Transaksi Anggaran</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted);" id="detailBudgetCategorySub">Daftar pengeluaran bulan ini yang terhitung pada anggaran</p>
+        </div>
+        <button type="button" class="close-btn" id="closeBudgetDetailModalBtn" onclick="closeModal('budgetDetailModal')">&times;</button>
+      </div>
+      <div class="transaction-list" id="budgetDetailList" style="max-height: 380px; overflow-y: auto;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="cancelBudgetDetailBtn" onclick="closeModal('budgetDetailModal')">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="categoryModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="catModalTitle"><i class="fa-solid fa-folder-plus"></i> Kelola Kategori & Sub-Kategori</h3>
+        <button type="button" class="close-btn" id="closeCatModalBtn" onclick="closeModal('categoryModal')">&times;</button>
+      </div>
+      <form id="categoryForm">
+        <div class="form-group">
+          <label for="catTargetType">Tipe Kategori</label>
+          <select id="catTargetType" class="form-control" required>
+            <option value="expense">Pengeluaran (-)</option>
+            <option value="income">Pemasukan (+)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="catActionType">Pilihan Aksi</label>
+          <select id="catActionType" class="form-control" required>
+            <option value="main">Tambah Kategori Utama Baru</option>
+            <option value="sub">Tambah Sub-Kategori ke Kategori Utama</option>
+          </select>
+        </div>
+        <div class="form-group" id="parentCatGroup" style="display: none;">
+          <label for="parentCatSelect">Pilih Kategori Utama Induk</label>
+          <select id="parentCatSelect" class="form-control"></select>
+        </div>
+        <div class="form-group">
+          <label for="newCatNameInput" id="newCatNameLabel">Nama Kategori Utama Baru</label>
+          <input type="text" id="newCatNameInput" class="form-control" placeholder="Contoh: Olahraga / Pendidikan" required>
+        </div>
+        <div class="form-row-2" id="mainCatIconGroup">
+          <div class="form-group">
+            <label for="newCatIconSelect">Ikon Kategori</label>
+            <select id="newCatIconSelect" class="form-control">
+              <option value="fa-folder">📁 Map / Folder (Default)</option>
+              <option value="fa-utensils">🍽️ Makanan & Minuman</option>
+              <option value="fa-bag-shopping">🛍️ Belanja</option>
+              <option value="fa-car">🚗 Transportasi</option>
+              <option value="fa-bolt">⚡ PLN & Utilitas</option>
+              <option value="fa-gamepad">🎮 Hiburan</option>
+              <option value="fa-heart-pulse">🏥 Kesehatan</option>
+              <option value="fa-graduation-cap">🎓 Pendidikan</option>
+              <option value="fa-dumbbell">🏋️ Olahraga</option>
+              <option value="fa-briefcase">💼 Bisnis & Karir</option>
+              <option value="fa-money-bill-wave">💵 Gaji & Income</option>
+              <option value="fa-gift">🎁 Hadiah & Bonus</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="newCatColorInput">Warna Tema</label>
+            <input type="color" id="newCatColorInput" class="form-control" value="#6366f1" style="height: 42px; padding: 4px; cursor: pointer;">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelCatBtn" onclick="closeModal('categoryModal')">Batal</button>
+          <button type="submit" class="btn-primary">Simpan Kategori</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="walletModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Tambah Dompet / Rekening</h3>
+        <button type="button" class="close-btn" id="closeWalletModalBtn" onclick="closeModal('walletModal')">&times;</button>
+      </div>
+      <form id="walletForm">
+        <div class="form-group">
+          <label for="walletNameInput">Nama Dompet / Bank</label>
+          <input type="text" id="walletNameInput" class="form-control" placeholder="Contoh: Bank BCA / GoPay / Cash" required>
+        </div>
+        <div class="form-group">
+          <label for="walletTypeInput">Tipe Akun</label>
+          <select id="walletTypeInput" class="form-control" required>
+            <option value="Bank">Bank</option>
+            <option value="E-Wallet">E-Wallet</option>
+            <option value="Tunai">Uang Tunai (Cash)</option>
+            <option value="Investasi">Investasi</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="walletBalanceInput">Saldo Awal (Rp)</label>
+          <input type="text" inputmode="numeric" id="walletBalanceInput" class="form-control currency-input" placeholder="0" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelWalletBtn" onclick="closeModal('walletModal')">Batal</button>
+          <button type="submit" class="btn-primary">Tambah Dompet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL TRANSFER ANTAR DOMPET -->
+  <div class="modal-overlay" id="transferModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-right-left" style="color: var(--primary);"></i> Transfer Antar Dompet</h3>
+        <button type="button" class="close-btn" id="closeTransferModalBtn" onclick="closeModal('transferModal')">&times;</button>
+      </div>
+      <form id="transferForm" onsubmit="handleTransferSubmit(event)">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="transferFromWallet">Dari Dompet</label>
+            <select id="transferFromWallet" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label for="transferToWallet">Ke Dompet</label>
+            <select id="transferToWallet" class="form-control" required></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="transferAmountInput">Jumlah Transfer (Rp)</label>
+          <input type="text" inputmode="numeric" id="transferAmountInput" class="form-control currency-input" placeholder="Contoh: 500.000" required>
+        </div>
+        <div class="form-group">
+          <label for="transferDateInput">Tanggal Transfer</label>
+          <input type="date" id="transferDateInput" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="transferNoteInput">Catatan (Opsional)</label>
+          <input type="text" id="transferNoteInput" class="form-control" placeholder="Contoh: Pindah dana bulanan ke GoPay">
+        </div>
+        <div id="transferBalancePreview" style="display:none; padding: 10px; background: var(--bg-card); border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-size: 0.85rem; margin-bottom: 4px;"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelTransferBtn" onclick="closeModal('transferModal')">Batal</button>
+          <button type="submit" class="btn-primary"><i class="fa-solid fa-right-left"></i> Proses Transfer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL RIWAYAT DOMPET -->
+  <div class="modal-overlay" id="walletHistoryModal">
+    <div class="modal-container" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 id="walletHistoryTitle"><i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i> Riwayat Dompet</h3>
+        <button type="button" class="close-btn" id="closeWalletHistoryModalBtn" onclick="closeModal('walletHistoryModal')">&times;</button>
+      </div>
+      <div id="walletHistorySummaryBar" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; padding: 12px; background: var(--bg-card); border-radius: var(--radius-sm); border: 1px solid var(--border-color);"></div>
+      <div id="walletHistoryList" style="max-height: 450px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+      <div class="modal-footer" style="margin-top: 16px;">
+        <button type="button" class="btn-secondary" onclick="closeModal('walletHistoryModal')">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- UNIFIED DATABASE & BACKUP CENTER MODAL -->
+  <div class="modal-overlay" id="backupModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-database" style="color: var(--primary);"></i> Pusat Database & Backup</h3>
+        <button type="button" class="close-btn" id="closeBackupModalBtn" onclick="closeModal('backupModal')">&times;</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div>
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px;"><i class="fa-solid fa-download"></i> 1. Ekspor & Cadangkan Data (Backup)</h4>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">Unduh seluruh catatan transaksi, dompet, target, dan anggaran Anda dalam format CSV atau JSON backup.</p>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button type="button" class="btn-primary" id="exportCsvBtn" onclick="exportToCSV()">
+              <i class="fa-solid fa-file-csv"></i> Unduh CSV
+            </button>
+            <button type="button" class="btn-secondary" id="exportJsonBtn" onclick="exportToJSON()">
+              <i class="fa-solid fa-code"></i> Unduh JSON Backup
+            </button>
+          </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color);">
+
+        <div>
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px;"><i class="fa-solid fa-upload"></i> 2. Impor & Restorasi Data (Restore)</h4>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">Pilih berkas JSON backup atau data transaksi dari aplikasi/proyek lain untuk diimpor ke FinTrack.</p>
+          <input type="file" id="importJsonInput" accept=".json" class="form-control" onchange="importFromJSON(event)">
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color);">
+
+        <div>
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px;"><i class="fa-solid fa-gears"></i> 3. Reset Database & Data Demo</h4>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">Muat ulang data simulasi contoh atau hapus bersih seluruh data dari browser Anda.</p>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button type="button" class="btn-secondary" id="loadDemoDataBtn" onclick="window.loadDemoData(true); closeModal('backupModal');">
+              <i class="fa-solid fa-database"></i> Muat Data Contoh (Demo)
+            </button>
+            <button type="button" class="btn-secondary" style="border-color: var(--expense-border); color: var(--expense);" id="clearAllDataBtn" onclick="if(confirm('Apakah Anda yakin ingin mengosongkan SELURUH database keuangan? Tindakan ini tidak dapat dibatalkan.')){ transactions=[]; wallets=[]; budgets=[]; savingsGoals=[]; debts=[]; recurringTxs=[]; categories=JSON.parse(JSON.stringify(INITIAL_CATEGORIES)); saveState(); renderAllViews(); closeModal('backupModal'); showToast('Seluruh database berhasil dikosongkan.','danger'); }">
+              <i class="fa-solid fa-trash-can"></i> Kosongkan Database
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js?v=20260722_fix_all"></script>
+</body>
+</html>
