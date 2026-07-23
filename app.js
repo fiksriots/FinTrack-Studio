@@ -177,6 +177,13 @@ function ensureStateSchemaSafety() {
 document.addEventListener('DOMContentLoaded', () => {
   try { initTheme(); } catch(e) { console.warn('initTheme error:', e); }
 
+  // Register PWA Service Worker for Android Installation & Offline Cache
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(reg => console.log('PWA ServiceWorker ready:', reg.scope))
+      .catch(err => console.warn('PWA ServiceWorker failed:', err));
+  }
+
   try {
     if (!isAppInitialized) {
       window.loadDemoData(false);
