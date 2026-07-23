@@ -321,24 +321,30 @@ function saveState() {
 }
 
 // Privacy Mode Manager
-function togglePrivacyMode() {
+window.togglePrivacyMode = function() {
   isPrivacyHidden = !isPrivacyHidden;
-  saveState();
-  updatePrivacyUI();
-}
+  localStorage.setItem('fintrack_privacy', JSON.stringify(isPrivacyHidden));
+  window.updatePrivacyUI();
+  if (typeof showToast === 'function') {
+    showToast(isPrivacyHidden ? 'Saldo disembunyikan (Mode Privasi Aktif)' : 'Saldo ditampilkan', 'info');
+  }
+};
 
-function updatePrivacyUI() {
+window.updatePrivacyUI = function() {
   const privacyIcon = document.getElementById('privacyIcon');
+  const privacyLabel = document.getElementById('privacyLabel');
   const targets = document.querySelectorAll('.privacy-target');
 
   if (isPrivacyHidden) {
-    privacyIcon.className = 'fa-solid fa-eye-slash';
+    if (privacyIcon) privacyIcon.className = 'fa-solid fa-eye-slash';
+    if (privacyLabel) privacyLabel.innerText = 'Sembunyi';
     targets.forEach(t => t.classList.add('privacy-hidden'));
   } else {
-    privacyIcon.className = 'fa-solid fa-eye';
+    if (privacyIcon) privacyIcon.className = 'fa-solid fa-eye';
+    if (privacyLabel) privacyLabel.innerText = 'Privasi';
     targets.forEach(t => t.classList.remove('privacy-hidden'));
   }
-}
+};
 
 // Theme Manager
 function initTheme() {
@@ -447,7 +453,7 @@ function safeAddEventListener(id, event, handler) {
 // Event Listeners Setup
 function setupEventListeners() {
   safeAddEventListener('themeToggleBtn', 'click', toggleTheme);
-  safeAddEventListener('privacyToggleBtn', 'click', togglePrivacyMode);
+  safeAddEventListener('privacyToggleBtn', 'click', window.togglePrivacyMode);
 
   // Calendar Navigation
   safeAddEventListener('prevMonthBtn', 'click', () => {

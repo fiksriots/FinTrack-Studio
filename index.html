@@ -109,25 +109,26 @@
 
     <!-- Main Content Wrapper -->
     <main class="main-wrapper">
-      <!-- Top Header (Main Page Navbar Title) -->
       <header class="top-header">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <button type="button" class="btn-icon mobile-menu-btn" id="mobileMenuBtn" title="Buka / Tutup Menu Sidebar" onclick="window.toggleMobileSidebar()">
-            <i class="fa-solid fa-bars"></i>
-          </button>
-          <div class="page-title">
-            <h1 id="pageTitleHeading">Dashboard Keuangan</h1>
-            <p id="pageSubTitle">Pantau ringkasan saldo, statistik, dan analisis kesehatan keuangan Anda</p>
-          </div>
-        </div>
-
-        <div class="header-actions">
-          <div style="position: relative;">
-            <button type="button" class="btn-secondary" id="notificationBellBtn" onclick="window.toggleNotificationDropdown()" title="Notifikasi & Pengingat" style="position: relative;">
-              <i class="fa-solid fa-bell"></i>
-              <span id="notificationBadge" style="display: none; position: absolute; top: -4px; right: -4px; background: var(--expense); color: #fff; border-radius: 50%; font-size: 0.65rem; font-weight: 800; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;">0</span>
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+            <button type="button" class="btn-icon mobile-menu-btn" id="mobileMenuBtn" title="Buka / Tutup Menu Sidebar" onclick="window.toggleMobileSidebar()">
+              <i class="fa-solid fa-bars"></i>
             </button>
-            <div id="notificationDropdown" style="display: none; position: absolute; right: 0; top: 44px; width: 330px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); z-index: 1500; padding: 14px;">
+            <div class="page-title" style="min-width: 0;">
+              <h1 id="pageTitleHeading">Dashboard Keuangan</h1>
+              <p id="pageSubTitle">Pantau ringkasan saldo, statistik, dan analisis kesehatan keuangan Anda</p>
+            </div>
+          </div>
+
+          <!-- Icon Alert / Notifikasi Kecil Kanan Atas Navbar -->
+          <div style="position: relative; flex-shrink: 0;">
+            <button type="button" class="btn-icon" id="notificationBellBtn" onclick="window.toggleNotificationDropdown(event)" title="Notifikasi & Pengingat" style="position: relative; width: 38px; height: 38px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: var(--shadow-sm);">
+              <i class="fa-solid fa-bell"></i>
+              <span id="notificationBadge" style="display: none; position: absolute; top: -3px; right: -3px; background: #ef4444; color: #fff; border-radius: 50%; font-size: 0.65rem; font-weight: 800; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-card);">0</span>
+            </button>
+
+            <div id="notificationDropdown" style="display: none; position: absolute; right: 0; top: 46px; width: 320px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 1500; padding: 14px;">
               <div style="font-weight: 800; font-size: 0.88rem; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
                 <span><i class="fa-solid fa-bell" style="color: var(--primary);"></i> Pengingat & Alert</span>
                 <span id="notifCountText" style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">0 Pengingat</span>
@@ -135,8 +136,10 @@
               <div id="notificationList" style="max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
             </div>
           </div>
+        </div>
 
-          <button type="button" class="btn-secondary" id="privacyToggleBtn" onclick="togglePrivacyMode()" title="Sembunyikan / Tampilkan Saldo">
+        <div class="header-actions">
+          <button type="button" class="btn-secondary" id="privacyToggleBtn" onclick="window.togglePrivacyMode()" title="Sembunyikan / Tampilkan Saldo">
             <i class="fa-solid fa-eye" id="privacyIcon"></i> <span id="privacyLabel" class="btn-text">Privasi</span>
           </button>
           <button type="button" class="btn-secondary" id="openBackupModalBtn" onclick="openModal('backupModal')">
