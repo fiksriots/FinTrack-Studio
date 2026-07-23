@@ -609,6 +609,18 @@ function openTxModal(tx = null, defaultDate = null) {
     populateSubCategoryDropdown(tx.category, tx.type);
     document.getElementById('txSubCategory').value = tx.subCategory || '';
     document.getElementById('txWallet').value = tx.wallet;
+
+    if (tx.receipt) {
+      document.getElementById('txReceiptData').value = tx.receipt;
+      const imgPreview = document.getElementById('txReceiptPreviewImg');
+      const container = document.getElementById('txReceiptPreviewContainer');
+      if (imgPreview && container) {
+        imgPreview.src = tx.receipt;
+        container.style.display = 'block';
+      }
+    } else {
+      window.removeReceiptPhoto();
+    }
   } else {
     document.getElementById('modalTxTitle').innerText = 'Tambah Transaksi';
     document.getElementById('txId').value = '';
@@ -617,6 +629,7 @@ function openTxModal(tx = null, defaultDate = null) {
     typeExpenseBtn.className = 'type-btn active expense';
     typeIncomeBtn.className = 'type-btn income';
     populateCategoryDropdown('expense');
+    window.removeReceiptPhoto();
   }
 
   openModal('transactionModal');
@@ -925,15 +938,16 @@ function handleTxSubmit(e) {
   const date = document.getElementById('txDate').value;
   const note = document.getElementById('txNote').value;
   const tags = document.getElementById('txTags').value.trim();
+  const receipt = document.getElementById('txReceiptData') ? document.getElementById('txReceiptData').value : null;
 
   if (id) {
     const index = transactions.findIndex(t => t.id === id);
     if (index !== -1) {
-      transactions[index] = { id, type, amount: amountInIDR, currency, category, subCategory, wallet, date, note, tags };
+      transactions[index] = { id, type, amount: amountInIDR, currency, category, subCategory, wallet, date, note, tags, receipt };
       showToast('Transaksi berhasil diperbarui.', 'success');
     }
   } else {
-    const newTx = { id: 'tx-' + Date.now(), type, amount: amountInIDR, currency, category, subCategory, wallet, date, note, tags };
+    const newTx = { id: 'tx-' + Date.now(), type, amount: amountInIDR, currency, category, subCategory, wallet, date, note, tags, receipt };
     transactions.unshift(newTx);
     showToast('Transaksi baru ditambahkan!', 'success');
   }
@@ -1372,6 +1386,8 @@ function renderAllViews() {
   safeRender(renderSmartAlerts, 'SmartAlerts');
   safeRender(renderMonthComparisonCard, 'MonthComparison');
   safeRender(renderFinancialHealth, 'FinancialHealth');
+  safeRender(renderCashflowStatement, 'CashflowStatement');
+  safeRender(renderNotifications, 'Notifications');
   safeRender(renderDashboardTxList, 'DashboardTxList');
   safeRender(renderTransactionsList, 'TransactionsList');
   safeRender(renderCalendarView, 'CalendarView');
@@ -2052,9 +2068,9 @@ function createTxItemHTML(tx) {
     ? `<span class="tx-badge" style="background: rgba(99,102,241,0.15); color: #6366f1; border-color: rgba(99,102,241,0.3); font-weight: 700;">${isTransferIn ? '↓ Masuk' : '↑ Keluar'}</span>`
     : '';
 
-  const editBtn = isTransfer
-    ? '' // Transfer tidak bisa diedit
-    : `<button type="button" class="btn-icon" onclick="openTxModalById('${tx.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>`;
+  const receiptBtn = tx.receipt
+    ? `<button type="button" class="btn-icon" onclick="window.viewReceiptPhoto('${tx.id}')" title="Lihat Foto Struk/Nota" style="color: #4285F4;"><i class="fa-solid fa-receipt"></i></button>`
+    : '';
 
   return `
     <div class="transaction-item">
@@ -2078,6 +2094,7 @@ function createTxItemHTML(tx) {
         <div class="tx-date">${formatDateIndo(tx.date)}</div>
       </div>
       <div class="tx-actions">
+        ${receiptBtn}
         ${editBtn}
         <button type="button" class="btn-icon danger" onclick="deleteTransaction('${tx.id}')" title="Hapus"><i class="fa-solid fa-trash"></i></button>
       </div>
@@ -3714,4 +3731,287 @@ window.generatePdfReport = function(e) {
 
   closeModal('pdfReportModal');
   showToast('Jendela cetak Laporan PDF telah dibuka!', 'success');
+};
+
+// --------------------------------------------------------------------------
+// RECEIPT PHOTO ATTACHMENT SUITE
+// --------------------------------------------------------------------------
+window.handleReceiptUpload = function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    showToast('Ukuran gambar struk maksimal 2MB.', 'warning');
+    e.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const base64Data = evt.target.result;
+    document.getElementById('txReceiptData').value = base64Data;
+    const imgPreview = document.getElementById('txReceiptPreviewImg');
+    const container = document.getElementById('txReceiptPreviewContainer');
+    if (imgPreview && container) {
+      imgPreview.src = base64Data;
+      container.style.display = 'block';
+    }
+  };
+  reader.readAsDataURL(file);
+};
+
+window.removeReceiptPhoto = function() {
+  const input = document.getElementById('txReceiptInput');
+  const dataInput = document.getElementById('txReceiptData');
+  if (input) input.value = '';
+  if (dataInput) dataInput.value = '';
+  const container = document.getElementById('txReceiptPreviewContainer');
+  if (container) container.style.display = 'none';
+};
+
+window.viewReceiptPhoto = function(txId) {
+  const tx = (transactions || []).find(t => t.id === txId);
+  if (!tx || !tx.receipt) return;
+
+  const fullImg = document.getElementById('fullReceiptImg');
+  if (fullImg) fullImg.src = tx.receipt;
+  openModal('viewReceiptModal');
+};
+
+// --------------------------------------------------------------------------
+// HEADER NOTIFICATIONS & DUE REMINDERS SYSTEM
+// --------------------------------------------------------------------------
+window.toggleNotificationDropdown = function() {
+  const dropdown = document.getElementById('notificationDropdown');
+  if (!dropdown) return;
+  if (dropdown.style.display === 'none' || !dropdown.style.display) {
+    dropdown.style.display = 'block';
+  } else {
+    dropdown.style.display = 'none';
+  }
+};
+
+function renderNotifications() {
+  const notifListEl = document.getElementById('notificationList');
+  const badgeEl = document.getElementById('notificationBadge');
+  const countTextEl = document.getElementById('notifCountText');
+
+  if (!notifListEl) return;
+
+  const items = [];
+  const today = new Date();
+
+  // 1. Check Recurring Txs due soon
+  (recurringTxs || []).forEach(r => {
+    items.push({
+      type: 'recurring',
+      icon: 'fa-rotate',
+      color: 'var(--primary)',
+      title: `Tagihan Rutin: ${r.title}`,
+      sub: `Nominal ${formatRupiah(r.amount)} &bull; ${r.frequency || 'Bulanan'}`,
+      actionText: 'Eksekusi',
+      actionFn: `window.executeRecurringNow('${r.id}')`
+    });
+  });
+
+  // 2. Check Debts due soon / overdue
+  (debts || []).forEach(d => {
+    const isLunas = (d.payments || []).reduce((acc, p) => acc + p.amount, 0) >= d.amount;
+    if (!isLunas) {
+      const isHutang = d.type === 'hutang';
+      const label = isHutang ? `Hutang ke ${d.person}` : `Piutang pada ${d.person}`;
+      const rem = d.amount - (d.payments || []).reduce((acc, p) => acc + p.amount, 0);
+      items.push({
+        type: 'debt',
+        icon: 'fa-handshake',
+        color: isHutang ? 'var(--warning)' : 'var(--income)',
+        title: label,
+        sub: `Sisa ${formatRupiah(rem)} &bull; Jatuh Tempo: ${d.dueDate || 'Segera'}`,
+        actionText: 'Bayar',
+        actionFn: `window.openDebtPayModal('${d.id}')`
+      });
+    }
+  });
+
+  // 3. Check Budget Alerts
+  (budgets || []).forEach(b => {
+    const currentMonthStr = today.toISOString().slice(0, 7);
+    let spent = 0;
+    const catList = Array.isArray(b.categories) ? b.categories : [b.category];
+    (transactions || []).forEach(t => {
+      if (t.type === 'expense' && t.date && t.date.startsWith(currentMonthStr) && catList.includes(t.category)) {
+        spent += t.amount;
+      }
+    });
+
+    const pct = b.limit > 0 ? Math.round((spent / b.limit) * 100) : 0;
+    if (pct >= 80) {
+      items.push({
+        type: 'budget',
+        icon: 'fa-triangle-exclamation',
+        color: pct >= 100 ? 'var(--expense)' : 'var(--warning)',
+        title: `Anggaran "${b.name || catList.join(', ')}" ${pct}%`,
+        sub: `Terpakai ${formatRupiah(spent)} dari batas ${formatRupiah(b.limit)}`,
+        actionText: 'Detail',
+        actionFn: `window.openBudgetDetailModal('${b.id}')`
+      });
+    }
+  });
+
+  if (badgeEl) {
+    if (items.length > 0) {
+      badgeEl.innerText = items.length;
+      badgeEl.style.display = 'flex';
+    } else {
+      badgeEl.style.display = 'none';
+    }
+  }
+
+  if (countTextEl) countTextEl.innerText = `${items.length} Pengingat`;
+
+  if (items.length === 0) {
+    notifListEl.innerHTML = `
+      <div style="text-align: center; padding: 18px 10px; color: var(--text-muted); font-size: 0.82rem;">
+        <i class="fa-solid fa-circle-check" style="color: var(--income); font-size: 1.5rem; margin-bottom: 6px; display: block;"></i>
+        Semua tagihan, hutang & anggaran dalam kondisi aman!
+      </div>
+    `;
+  } else {
+    notifListEl.innerHTML = items.map(it => `
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 8px 10px; background: var(--bg-main); border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-size: 0.8rem;">
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <i class="fa-solid ${it.icon}" style="color: ${it.color}; font-size: 0.9rem; margin-top: 2px;"></i>
+          <div>
+            <div style="font-weight: 700; color: var(--text-main); line-height: 1.2;">${it.title}</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">${it.sub}</div>
+          </div>
+        </div>
+        <button type="button" class="btn-primary" style="padding: 3px 8px; font-size: 0.7rem; white-space: nowrap;" onclick="${it.actionFn}">${it.actionText}</button>
+      </div>
+    `).join('');
+  }
+}
+
+// --------------------------------------------------------------------------
+// CASH FLOW & INCOME STATEMENT WIDGET
+// --------------------------------------------------------------------------
+function renderCashflowStatement() {
+  const container = document.getElementById('cashflowStatementContainer');
+  if (!container) return;
+
+  const now = new Date();
+  const currentMonthStr = now.toISOString().slice(0, 7);
+  const currentYearStr = now.getFullYear().toString();
+
+  let monthIncome = 0;
+  let monthExpense = 0;
+  let yearIncome = 0;
+  let yearExpense = 0;
+
+  (transactions || []).forEach(t => {
+    if (!t.date) return;
+    if (t.date.startsWith(currentMonthStr)) {
+      if (t.type === 'income') monthIncome += t.amount;
+      else if (t.type === 'expense') monthExpense += t.amount;
+    }
+
+    if (t.date.startsWith(currentYearStr)) {
+      if (t.type === 'income') yearIncome += t.amount;
+      else if (t.type === 'expense') yearExpense += t.amount;
+    }
+  });
+
+  const monthNet = monthIncome - monthExpense;
+  const yearNet = yearIncome - yearExpense;
+  const savingsRate = monthIncome > 0 ? Math.round(((monthIncome - monthExpense) / monthIncome) * 100) : 0;
+
+  container.innerHTML = `
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+      <div style="padding: 12px; background: var(--bg-glass); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Laba / Rugi Bulan Ini</div>
+        <div style="font-size: 1.2rem; font-weight: 800; color: ${monthNet >= 0 ? 'var(--income)' : 'var(--expense)'}; margin-top: 4px;">
+          ${monthNet >= 0 ? '+' : ''}${formatRupiah(monthNet)}
+        </div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Rasio Tabungan: <strong style="color: var(--text-main);">${savingsRate}%</strong></div>
+      </div>
+
+      <div style="padding: 12px; background: var(--bg-glass); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Surplus YTD (Tahun ${now.getFullYear()})</div>
+        <div style="font-size: 1.2rem; font-weight: 800; color: ${yearNet >= 0 ? 'var(--primary)' : 'var(--expense)'}; margin-top: 4px;">
+          ${yearNet >= 0 ? '+' : ''}${formatRupiah(yearNet)}
+        </div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Total Income: ${formatRupiah(yearIncome)}</div>
+      </div>
+    </div>
+  `;
+}
+
+// --------------------------------------------------------------------------
+// EMERGENCY FUND & PENSION CALCULATORS SUITE
+// --------------------------------------------------------------------------
+window.handleEmergencyFundSubmit = function(e) {
+  if (e) e.preventDefault();
+  const expense = parseFormattedNumber(document.getElementById('efExpenseInput').value);
+  const status = document.getElementById('efStatusSelect').value;
+
+  let multiplier = 3;
+  let statusLabel = "Single / Lazim";
+  if (status === 'single-dependents') { multiplier = 6; statusLabel = "Single + Tanggungan"; }
+  if (status === 'married') { multiplier = 6; statusLabel = "Menikah Tanpa Anak"; }
+  if (status === 'married-1child') { multiplier = 9; statusLabel = "Menikah + 1 Anak"; }
+  if (status === 'married-2child') { multiplier = 12; statusLabel = "Menikah + 2+ Anak / Freelancer"; }
+
+  const idealFund = expense * multiplier;
+  const card = document.getElementById('efResultCard');
+  if (card) {
+    card.style.display = 'block';
+    card.innerHTML = `
+      <div style="font-size: 0.82rem; color: var(--text-muted);">Target Dana Darurat Ideal (${multiplier} Bulan Pengeluaran):</div>
+      <div style="font-size: 1.45rem; font-weight: 800; color: var(--income); margin: 4px 0 10px 0;">
+        ${formatRupiah(idealFund)}
+      </div>
+      <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.4;">
+        Berdasarkan profil status <strong>${statusLabel}</strong> dan pengeluaran bulanan ${formatRupiah(expense)}, Anda direkomendasikan memiliki cadangan kas sebesar ${formatRupiah(idealFund)}.
+      </p>
+    `;
+  }
+};
+
+window.handlePensionSubmit = function(e) {
+  if (e) e.preventDefault();
+  const initial = parseFormattedNumber(document.getElementById('pensionInitialInput').value) || 0;
+  const monthly = parseFormattedNumber(document.getElementById('pensionMonthlyInput').value);
+  const annualReturn = parseFloat(document.getElementById('pensionReturnInput').value) / 100;
+  const years = parseInt(document.getElementById('pensionYearsInput').value);
+
+  const months = years * 12;
+  const r = annualReturn / 12;
+
+  const fvInitial = initial * Math.pow(1 + r, months);
+  const fvMonthly = monthly * ((Math.pow(1 + r, months) - 1) / r) * (1 + r);
+  const totalAccumulated = Math.round(fvInitial + fvMonthly);
+
+  const totalInvested = initial + (monthly * months);
+  const totalInterest = totalAccumulated - totalInvested;
+
+  const card = document.getElementById('pensionResultCard');
+  if (card) {
+    card.style.display = 'block';
+    card.innerHTML = `
+      <div style="font-size: 0.82rem; color: var(--text-muted);">Estimasi Akumulasi Saldo Pensiun (${years} Tahun):</div>
+      <div style="font-size: 1.45rem; font-weight: 800; color: #f59e0b; margin: 4px 0 10px 0;">
+        ${formatRupiah(totalAccumulated)}
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8rem; margin-top: 10px;">
+        <div style="padding: 8px; background: var(--bg-main); border-radius: var(--radius-sm);">
+          <span style="color: var(--text-muted);">Total Modal Disetor:</span><br>
+          <strong>${formatRupiah(totalInvested)}</strong>
+        </div>
+        <div style="padding: 8px; background: var(--bg-main); border-radius: var(--radius-sm);">
+          <span style="color: var(--income);">Hasil Return Investasi:</span><br>
+          <strong style="color: var(--income);">+${formatRupiah(totalInterest)}</strong>
+        </div>
+      </div>
+    `;
+  }
 };

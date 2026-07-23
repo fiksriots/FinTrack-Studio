@@ -122,6 +122,20 @@
         </div>
 
         <div class="header-actions">
+          <div style="position: relative;">
+            <button type="button" class="btn-secondary" id="notificationBellBtn" onclick="window.toggleNotificationDropdown()" title="Notifikasi & Pengingat" style="position: relative;">
+              <i class="fa-solid fa-bell"></i>
+              <span id="notificationBadge" style="display: none; position: absolute; top: -4px; right: -4px; background: var(--expense); color: #fff; border-radius: 50%; font-size: 0.65rem; font-weight: 800; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;">0</span>
+            </button>
+            <div id="notificationDropdown" style="display: none; position: absolute; right: 0; top: 44px; width: 330px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); z-index: 1500; padding: 14px;">
+              <div style="font-weight: 800; font-size: 0.88rem; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                <span><i class="fa-solid fa-bell" style="color: var(--primary);"></i> Pengingat & Alert</span>
+                <span id="notifCountText" style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">0 Pengingat</span>
+              </div>
+              <div id="notificationList" style="max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+          </div>
+
           <button type="button" class="btn-secondary" id="privacyToggleBtn" onclick="togglePrivacyMode()" title="Sembunyikan / Tampilkan Saldo">
             <i class="fa-solid fa-eye" id="privacyIcon"></i> <span id="privacyLabel" class="btn-text">Privasi</span>
           </button>
@@ -225,6 +239,15 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Laporan Arus Kas & Laba Rugi Card -->
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3><i class="fa-solid fa-file-invoice-dollar" style="color: var(--income);"></i> Ringkasan Arus Kas & Laba Rugi</h3>
+              <span class="card-subtext" id="cashflowPeriodText">Bulan Ini</span>
+            </div>
+            <div id="cashflowStatementContainer"></div>
           </div>
         </div>
 
@@ -510,6 +533,62 @@
             </form>
             <div id="vehicleResultCard" style="margin-top: 20px; display: none; padding: 16px; background: var(--bg-glass); border-radius: var(--radius-md); border: 1px solid var(--border-color);"></div>
           </div>
+
+          <!-- 6. Kalkulator Dana Darurat Ideal -->
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3><i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> Kalkulator Dana Darurat Ideal</h3>
+            </div>
+            <form id="emergencyFundForm" onsubmit="window.handleEmergencyFundSubmit(event)">
+              <div class="form-group">
+                <label for="efExpenseInput">Pengeluaran Bulanan Rata-Rata (Rp)</label>
+                <input type="text" inputmode="numeric" id="efExpenseInput" class="form-control currency-input" placeholder="Contoh: 5.000.000" required>
+              </div>
+              <div class="form-group">
+                <label for="efStatusSelect">Status Pernikahan & Tanggungan</label>
+                <select id="efStatusSelect" class="form-control">
+                  <option value="single">Single / Lazim (3x Pengeluaran)</option>
+                  <option value="single-dependents">Single + Tanggungan Orang Tua (6x Pengeluaran)</option>
+                  <option value="married" selected>Menikah Tanpa Anak (6x Pengeluaran)</option>
+                  <option value="married-1child">Menikah + 1 Anak (9x Pengeluaran)</option>
+                  <option value="married-2child">Menikah + 2+ Anak / Freelancer (12x Pengeluaran)</option>
+                </select>
+              </div>
+              <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; background: linear-gradient(135deg, #10b981, #059669);">Hitung Dana Darurat Ideal</button>
+            </form>
+            <div id="efResultCard" style="margin-top: 20px; display: none; padding: 16px; background: var(--bg-glass); border-radius: var(--radius-md); border: 1px solid var(--border-color);"></div>
+          </div>
+
+          <!-- 7. Kalkulator Simulasi Dana Pensiun & Compound Interest -->
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3><i class="fa-solid fa-seedling" style="color: #f59e0b;"></i> Kalkulator Investasi & Pensiun</h3>
+            </div>
+            <form id="pensionForm" onsubmit="window.handlePensionSubmit(event)">
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="pensionInitialInput">Modal Awal (Rp)</label>
+                  <input type="text" inputmode="numeric" id="pensionInitialInput" class="form-control currency-input" placeholder="0">
+                </div>
+                <div class="form-group">
+                  <label for="pensionMonthlyInput">Investasi Bulanan (Rp)</label>
+                  <input type="text" inputmode="numeric" id="pensionMonthlyInput" class="form-control currency-input" placeholder="Contoh: 1.000.000" required>
+                </div>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="pensionReturnInput">Return Investasi (%/Thn)</label>
+                  <input type="number" step="0.5" id="pensionReturnInput" class="form-control" value="10" required>
+                </div>
+                <div class="form-group">
+                  <label for="pensionYearsInput">Jangka Waktu (Tahun)</label>
+                  <input type="number" step="1" id="pensionYearsInput" class="form-control" value="20" required>
+                </div>
+              </div>
+              <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; background: linear-gradient(135deg, #f59e0b, #d97706);">Simulasi Akumulasi Pensiun</button>
+            </form>
+            <div id="pensionResultCard" style="margin-top: 20px; display: none; padding: 16px; background: var(--bg-glass); border-radius: var(--radius-md); border: 1px solid var(--border-color);"></div>
+          </div>
         </div>
       </section>
 
@@ -621,6 +700,16 @@
         <div class="form-group">
           <label for="txTags">Tag / Label (#Hashtag)</label>
           <input type="text" id="txTags" class="form-control" placeholder="Contoh: #LiburanBali #ProjectX">
+        </div>
+
+        <div class="form-group">
+          <label for="txReceiptInput"><i class="fa-solid fa-receipt"></i> Lampiran Foto Struk / Nota (Opsional)</label>
+          <input type="file" id="txReceiptInput" accept="image/*" class="form-control" onchange="window.handleReceiptUpload(event)">
+          <input type="hidden" id="txReceiptData">
+          <div id="txReceiptPreviewContainer" style="display: none; margin-top: 8px; position: relative; width: max-content;">
+            <img id="txReceiptPreviewImg" src="" alt="Struk" style="max-height: 90px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); object-fit: cover;">
+            <button type="button" onclick="window.removeReceiptPhoto()" style="position: absolute; top: -6px; right: -6px; background: #ef4444; color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+          </div>
         </div>
 
         <div class="modal-footer">
@@ -1238,6 +1327,22 @@
       <div id="gdriveBackupFileList" style="display: flex; flex-direction: column; gap: 8px; max-height: 350px; overflow-y: auto;"></div>
       <div class="modal-footer" style="margin-top: 16px;">
         <button type="button" class="btn-secondary" onclick="closeModal('gdriveRestoreModal')">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL VIEW RECEIPT PHOTO -->
+  <div class="modal-overlay" id="viewReceiptModal">
+    <div class="modal-container" style="max-width: 520px; text-align: center;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-receipt" style="color: var(--primary);"></i> Foto Struk / Nota Pembelian</h3>
+        <button type="button" class="close-btn" onclick="closeModal('viewReceiptModal')">&times;</button>
+      </div>
+      <div style="margin: 16px 0;">
+        <img id="fullReceiptImg" src="" alt="Foto Struk" style="max-width: 100%; max-height: 65vh; border-radius: var(--radius-md); border: 1px solid var(--border-color); object-fit: contain;">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeModal('viewReceiptModal')">Tutup</button>
       </div>
     </div>
   </div>

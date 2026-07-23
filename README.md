@@ -30,44 +30,53 @@
 - **Hierarki Kategori & Sub-Kategori**: Pencatatan spesifik hingga ke sub-kategori.
 - **Tag & Hashtag**: Penandaan khusus untuk pengelompokan transaksi (contoh: `#LiburanBali`, `#ProjectX`).
 - **Filter & Pencarian Lanjutan**: Filter berdasarkan Tipe (Pemasukan/Pengeluaran), Kategori, Rentang Waktu (Bulan Ini, Bulan Lalu, Tahun Ini, Semua Waktu), dan kata kunci pencarian.
-- **📄 Cetak & Ekspor PDF Laporan**: Fitur pembuatan Laporan Keuangan Eksekutif berformat PDF siap cetak dengan pilihan periode dan opsi komponen kustom (Ringkasan Eksekutif, Rincian Dompet, Rincian Pengeluaran per Kategori, dan Tabel Transaksi Lengkap).
+- **📄 Cetak & Ekspor PDF Laporan**: Fitur pembuatan Laporan Keuangan Eksekutif berformat PDF siap cetak dengan pilihan periode dan opsi komponen kustom.
+- **🧾 Lampiran Foto Struk / Nota**: Unggah foto struk/nota belanjaan yang disimpan secara lokal dan dapat diperbesar kapan saja dari daftar transaksi.
 
 ### 📅 4. Kalender Keuangan Bulanan
 - Tampilan kalender harian interaktif untuk memantau rekam pemasukan dan pengeluaran harian secara visual.
 - Klik tanggal manapun pada kalender untuk langsung memfilter daftar transaksi hari tersebut.
 
-### 🎯 5. Target Tabungan & Impian (Savings Goals)
+### 🔔 5. Sistem Notifikasi & Pengingat Pintar
+- Dropdown notifikasi di header atas yang memberikan pengingat otomatis untuk tagihan rutin berulang, hutang/piutang yang akan jatuh tempo, serta anggaran yang melampaui batas 80%-100%.
+
+### 🎯 6. Target Tabungan & Impian (Savings Goals)
 - Rencanakan target masa depan (Laptop, Dana Darurat, Liburan) dengan indikator progress persen.
 - **Setor Tabungan**: Memotong saldo dompet pilihan secara otomatis.
 - **Tarik Tabungan**: Mencairkan tabungan kembali ke dompet tujuan.
 - Histori setoran dan penarikan yang terekam rapi.
 
-### 🤝 6. Pencatatan Hutang & Piutang
+### 🤝 7. Pencatatan Hutang & Piutang
 - Kelola uang pinjaman (Hutang) dan uang yang dipinjamkan ke orang lain (Piutang) lengkap dengan tanggal jatuh tempo.
 - **Terhubung ke Dompet**: Pembayaran atau pelunasan secara otomatis menambah/memotong saldo dompet.
 - Histori riwayat cicilan & pelunasan.
 
-### 🔄 7. Transaksi Rutin & Berulang (Recurring Txs)
+### 🔄 8. Transaksi Rutin & Berulang (Recurring Txs)
 - Otomatisasi pencatatan tagihan bulanan (Wi-Fi, Listrik, Langganan Streaming) dan Gaji Bulanan.
 - Eksekusi 1-klik untuk langsung memproses tagihan ke catatan transaksi & saldo dompet.
 
-### 🎯 8. Kendali Anggaran & Budgeting
+### 🎯 9. Kendali Anggaran & Budgeting
 - Tentukan batas pengeluaran bulanan per kategori atau gabungan beberapa kategori.
 - Notifikasi visual warna saat anggaran aman (hijau), mendekati batas (kuning), atau melampaui batas (merah).
 - Pop-up detail rincian transaksi pengeluaran yang terhitung pada budget.
 
-### 🧮 9. Kalkulator Keuangan Lengkap
+### 📊 10. Ringkasan Arus Kas & Laba Rugi (Income Statement)
+- Card analisis Laba/Rugi bulanan, Surplus Year-to-Date (YTD), dan Rasio Tabungan (*Savings Rate*) di Dashboard.
+
+### 🧮 11. Kalkulator Keuangan Lengkap (7 Modul)
 1. **Zakat Maal**: Hitung kewajiban Zakat Maal berdasarkan nilai nisab emas 85 gram.
 2. **Simulasi KPR / Kredit**: Estimasi angsuran pokok dan bunga per bulan.
 3. **Simulasi Pinjol (Pinjaman Online)**: Hitung estimasi bunga harian/bulanan dan total pengembalian.
 4. **Simulasi Kartu Kredit**: Estimasi pembayar minimum & proyeksi waktu lunas.
 5. **Simulasi Kredit Kendaraan (Motor / Mobil)**: Hitung estimasi Total Down Payment (TDP) dan cicilan bulanan.
+6. **Dana Darurat Ideal**: Hitung target dana darurat berdasarkan pengeluaran bulanan & status tanggungan.
+7. **Akumulasi Dana Pensiun & Investasi**: Simulasi hasil investasi jangka panjang dengan *compound interest* (bunga berbunga).
 
-### 📁 10. Manajemen Kategori & Tema Custom
+### 📁 12. Manajemen Kategori & Tema Custom
 - Bebas menambah Kategori Utama dan Sub-Kategori baru.
 - Kustomisasi ikon FontAwesome dan warna indikator kategori.
 
-### 🔒 11. Privasi, Tema & Backup Data (Cloud & Local)
+### 🔒 13. Privasi, Tema & Backup Data (Cloud & Local)
 - **Mode Privasi**: Sembunyikan/tampilkan nominal saldo (`Rp ••••••••`) dengan 1 klik.
 - **Mode Gelap / Terang (Dark / Light Mode)**: Tampilan visual modern yang nyaman di mata.
 - **Sync Cloud (Google Drive)**: Integrasi langsung dengan Google Drive untuk menyimpan dan memulihkan cadangan data JSON secara terenkripsi & terisolasi di cloud pribadi Anda.
