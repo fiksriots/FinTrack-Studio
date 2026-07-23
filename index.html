@@ -1137,7 +1137,30 @@
         <hr style="border: 0; border-top: 1px solid var(--border-color);">
 
         <div>
-          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px;"><i class="fa-solid fa-gears"></i> 3. Reset Database & Data Demo</h4>
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px;"><i class="fa-brands fa-google-drive" style="color: #4285F4;"></i> 3. Sync Cloud (Google Drive)</h4>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">Simpan dan muat cadangan data JSON Anda secara aman dari akun Google Drive pribadi Anda.</p>
+          
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div id="gdriveStatusBox" style="padding: 10px 14px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.82rem; display: flex; align-items: center; justify-content: space-between;">
+              <span id="gdriveStatusText"><i class="fa-solid fa-circle-minus" style="color: var(--text-muted);"></i> Akun Google belum terhubung</span>
+              <button type="button" class="btn-secondary" style="padding: 4px 10px; font-size: 0.76rem;" onclick="window.initGoogleAuth()"><i class="fa-brands fa-google"></i> Hubungkan Google</button>
+            </div>
+            
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button type="button" class="btn-primary" id="gdriveUploadBtn" style="background: #4285F4;" onclick="window.uploadToGoogleDrive()">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Backup ke Google Drive
+              </button>
+              <button type="button" class="btn-secondary" id="gdriveRestoreBtn" onclick="window.listGoogleDriveBackups()">
+                <i class="fa-solid fa-cloud-arrow-down"></i> Restore dari Google Drive
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color);">
+
+        <div>
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px;"><i class="fa-solid fa-gears"></i> 4. Reset Database & Data Demo</h4>
           <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">Muat ulang data simulasi contoh atau hapus bersih seluruh data dari browser Anda.</p>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button type="button" class="btn-secondary" id="loadDemoDataBtn" onclick="window.loadDemoData(true); closeModal('backupModal');">
@@ -1152,9 +1175,26 @@
     </div>
   </div>
 
+  <!-- MODAL GDRIVE RESTORE SELECTOR -->
+  <div class="modal-overlay" id="gdriveRestoreModal">
+    <div class="modal-container" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3><i class="fa-brands fa-google-drive" style="color: #4285F4;"></i> Pilih File Backup Google Drive</h3>
+        <button type="button" class="close-btn" onclick="closeModal('gdriveRestoreModal')">&times;</button>
+      </div>
+      <p style="font-size: 0.83rem; color: var(--text-muted); margin-bottom: 14px;">Daftar berkas cadangan JSON yang tersimpan di Google Drive Anda:</p>
+      <div id="gdriveBackupFileList" style="display: flex; flex-direction: column; gap: 8px; max-height: 350px; overflow-y: auto;"></div>
+      <div class="modal-footer" style="margin-top: 16px;">
+        <button type="button" class="btn-secondary" onclick="closeModal('gdriveRestoreModal')">Batal</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <script src="app.js?v=20260722_fix_all"></script>
+  <!-- Google Identity Services SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="app.js?v=20260723_gdrive"></script>
 </body>
 </html>

@@ -3299,3 +3299,195 @@ function showToast(message, type = 'info') {
     setTimeout(() => toast.remove(), 300);
   }, 3500);
 }
+
+// --------------------------------------------------------------------------
+// GOOGLE DRIVE CLOUD BACKUP & RESTORE INTEGRATION
+// --------------------------------------------------------------------------
+let gdriveAccessToken = localStorage.getItem('fintrack_gdrive_token') || null;
+let tokenClient = null;
+
+const DEFAULT_GDRIVE_CLIENT_ID = "839401726481-sample.apps.googleusercontent.com"; 
+
+window.initGoogleAuth = function(callback = null) {
+  if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
+    showToast('Library Google Identity Services sedang dimuat, coba 2 detik lagi.', 'warning');
+    return;
+  }
+
+  const savedId = localStorage.getItem('fintrack_gdrive_client_id');
+  let clientId = savedId;
+  if (!clientId) {
+    clientId = prompt('Masukkan Google OAuth Client ID Anda (atau tekan OK untuk memakai Client ID bawaan):', DEFAULT_GDRIVE_CLIENT_ID);
+    if (clientId) localStorage.setItem('fintrack_gdrive_client_id', clientId.trim());
+  }
+
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: clientId || DEFAULT_GDRIVE_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/drive.file',
+    callback: (tokenResponse) => {
+      if (tokenResponse && tokenResponse.access_token) {
+        gdriveAccessToken = tokenResponse.access_token;
+        localStorage.setItem('fintrack_gdrive_token', gdriveAccessToken);
+        updateGoogleDriveUI(true);
+        showToast('Akun Google Drive berhasil terhubung!', 'success');
+        if (callback && typeof callback === 'function') callback();
+      } else {
+        showToast('Gagal menghubungkan akun Google.', 'danger');
+      }
+    },
+  });
+
+  tokenClient.requestAccessToken({ prompt: 'consent' });
+};
+
+function updateGoogleDriveUI(isConnected) {
+  const statusBox = document.getElementById('gdriveStatusText');
+  if (statusBox) {
+    if (isConnected || gdriveAccessToken) {
+      statusBox.innerHTML = `<i class="fa-solid fa-circle-check" style="color: var(--income);"></i> Terhubung ke Google Drive`;
+    } else {
+      statusBox.innerHTML = `<i class="fa-solid fa-circle-minus" style="color: var(--text-muted);"></i> Akun Google belum terhubung`;
+    }
+  }
+}
+
+window.uploadToGoogleDrive = function() {
+  if (!gdriveAccessToken) {
+    window.initGoogleAuth(() => window.uploadToGoogleDrive());
+    return;
+  }
+
+  showToast('Mengunggah backup ke Google Drive...', 'info');
+
+  const data = { transactions, wallets, budgets, categories, savingsGoals, debts, recurringTxs, exportDate: new Date().toISOString() };
+  const jsonStr = JSON.stringify(data, null, 2);
+  const fileName = `fintrack_backup_${new Date().toISOString().slice(0, 10)}.json`;
+
+  const metadata = {
+    name: fileName,
+    mimeType: 'application/json'
+  };
+
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+  form.append('file', new Blob([jsonStr], { type: 'application/json' }));
+
+  fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + gdriveAccessToken
+    },
+    body: form
+  })
+  .then(res => {
+    if (res.status === 401) {
+      gdriveAccessToken = null;
+      localStorage.removeItem('fintrack_gdrive_token');
+      window.initGoogleAuth(() => window.uploadToGoogleDrive());
+      throw new Error('Token expired');
+    }
+    return res.json();
+  })
+  .then(file => {
+    if (file && file.id) {
+      showToast(`Backup ${fileName} berhasil diunggah ke Google Drive!`, 'success');
+      updateGoogleDriveUI(true);
+    } else {
+      showToast('Gagal mengunggah ke Google Drive.', 'danger');
+    }
+  })
+  .catch(err => {
+    console.error(err);
+  });
+};
+
+window.listGoogleDriveBackups = function() {
+  if (!gdriveAccessToken) {
+    window.initGoogleAuth(() => window.listGoogleDriveBackups());
+    return;
+  }
+
+  showToast('Memuat daftar backup dari Google Drive...', 'info');
+
+  const query = encodeURIComponent("name contains 'fintrack_backup_' and trashed = false");
+  fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,createdTime,size)&orderBy=createdTime desc`, {
+    headers: { 'Authorization': 'Bearer ' + gdriveAccessToken }
+  })
+  .then(res => {
+    if (res.status === 401) {
+      gdriveAccessToken = null;
+      localStorage.removeItem('fintrack_gdrive_token');
+      window.initGoogleAuth(() => window.listGoogleDriveBackups());
+      throw new Error('Token expired');
+    }
+    return res.json();
+  })
+  .then(data => {
+    const listEl = document.getElementById('gdriveBackupFileList');
+    if (!listEl) return;
+
+    if (!data.files || data.files.length === 0) {
+      listEl.innerHTML = `
+        <div style="text-align: center; padding: 24px; color: var(--text-muted);">
+          <i class="fa-brands fa-google-drive" style="font-size: 2rem; margin-bottom: 8px; display: block; color: #4285F4;"></i>
+          <p>Belum ada berkas backup <i>fintrack_backup_*.json</i> di Google Drive Anda.</p>
+        </div>
+      `;
+    } else {
+      listEl.innerHTML = data.files.map(f => {
+        const createdDate = f.createdTime ? new Date(f.createdTime).toLocaleString('id-ID') : '-';
+        const sizeKB = f.size ? Math.round(f.size / 1024) + ' KB' : '-';
+        return `
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--bg-card); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <div>
+              <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-main);"><i class="fa-solid fa-file-code" style="color: #4285F4;"></i> ${f.name}</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Dibuat: ${createdDate} &bull; Ukuran: ${sizeKB}</div>
+            </div>
+            <button type="button" class="btn-primary" style="padding: 6px 12px; font-size: 0.78rem;" onclick="window.restoreFromGoogleDriveFile('${f.id}', '${f.name}')">
+              <i class="fa-solid fa-cloud-arrow-down"></i> Restore
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    openModal('gdriveRestoreModal');
+  })
+  .catch(err => {
+    console.error(err);
+  });
+};
+
+window.restoreFromGoogleDriveFile = function(fileId, fileName) {
+  if (!confirm(`Apakah Anda yakin ingin memulihkan database dari berkas "${fileName}" di Google Drive?`)) return;
+
+  fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+    headers: { 'Authorization': 'Bearer ' + gdriveAccessToken }
+  })
+  .then(res => res.json())
+  .then(data => {
+    let importedTxCount = 0;
+    if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+      if (Array.isArray(data.wallets) && data.wallets.length > 0) wallets = data.wallets;
+      if (Array.isArray(data.budgets)) budgets = data.budgets;
+      if (data.categories && typeof data.categories === 'object') categories = data.categories;
+      if (Array.isArray(data.savingsGoals)) savingsGoals = data.savingsGoals;
+      if (Array.isArray(data.debts)) debts = data.debts;
+      if (Array.isArray(data.recurringTxs)) recurringTxs = data.recurringTxs;
+      if (Array.isArray(data.transactions)) transactions = data.transactions;
+      importedTxCount = transactions.length;
+    }
+
+    ensureStateSchemaSafety();
+    saveState();
+    populateDropdowns();
+    renderAllViews();
+    closeModal('gdriveRestoreModal');
+    closeModal('backupModal');
+    showToast(`Berhasil me-restore database dari Google Drive! (${importedTxCount} transaksi)`, 'success');
+  })
+  .catch(err => {
+    console.error(err);
+    showToast('Gagal me-restore berkas dari Google Drive.', 'danger');
+  });
+};
