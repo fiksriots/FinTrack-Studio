@@ -1197,26 +1197,35 @@ input[type="file"].form-control::file-selector-button:hover {
   .sidebar-toggle-btn { display: none !important; }
 
   aside.sidebar {
-    position: fixed;
-    left: -320px;
-    top: 0;
-    z-index: 1000 !important;
+    position: fixed !important;
+    left: -320px !important;
+    top: 0 !important;
+    width: 275px !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    z-index: 1300 !important;
     background: #121824 !important;
-    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.8);
-    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.8) !important;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
 
   [data-theme="light"] aside.sidebar {
     background: #ffffff !important;
-    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.15);
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.15) !important;
   }
 
   aside.sidebar.mobile-open {
-    left: 0;
+    left: 0 !important;
+  }
+
+  .sidebar-overlay {
+    z-index: 1200 !important;
   }
 
   .main-wrapper {
-    padding: 24px 20px;
+    padding: 20px 16px;
   }
 
   .dashboard-grid, .dashboard-widgets-grid {
@@ -1234,35 +1243,45 @@ input[type="file"].form-control::file-selector-button:hover {
 /* -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
   .main-wrapper {
-    padding: 16px 12px;
+    padding: 14px 10px;
+  }
+
+  .top-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 16px;
   }
 
   .page-title h1 {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
   }
 
   .page-title p {
-    font-size: 0.8rem;
+    font-size: 0.76rem;
   }
 
   .header-actions {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
     width: 100%;
   }
 
+  .header-actions #openAddTransactionBtn {
+    grid-column: span 2;
+    justify-content: center;
+    order: -1;
+  }
+
   .header-actions .btn-primary,
   .header-actions .btn-secondary {
-    flex: 1;
-    min-width: 0;
-    padding: 0 10px;
-    font-size: 0.8rem;
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 0.76rem;
     justify-content: center;
     text-align: center;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .summary-grid {
@@ -1271,34 +1290,36 @@ input[type="file"].form-control::file-selector-button:hover {
   }
 
   .card-summary {
-    padding: 14px 12px;
+    padding: 12px 10px;
   }
 
   .card-title {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
   }
 
   .card-amount {
-    font-size: 1.15rem;
+    font-size: clamp(0.9rem, 3.8vw, 1.15rem);
+    word-break: break-all;
   }
 
   .card-subtext {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
   }
 
   .icon-badge {
-    width: 32px;
-    height: 32px;
-    font-size: 0.85rem;
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
   }
 
   .goal-grid, .debt-grid, .recurring-grid, .budget-grid, .wallet-grid, .category-manager-grid, .calculators-grid {
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: 12px;
   }
 
   .filter-bar {
     gap: 10px;
+    padding: 12px 10px;
   }
 
   .filter-group {
@@ -1308,20 +1329,16 @@ input[type="file"].form-control::file-selector-button:hover {
     gap: 8px;
   }
 
-  .search-box {
-    width: 100%;
-    min-width: 100%;
-  }
-
-  .select-custom {
-    width: 100%;
+  .search-box, .select-custom, .filter-group button, .filter-group input {
+    width: 100% !important;
+    min-width: 100% !important;
   }
 
   .transaction-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
-    padding: 14px 12px;
+    padding: 12px 10px;
   }
 
   .tx-left {
@@ -1329,7 +1346,7 @@ input[type="file"].form-control::file-selector-button:hover {
   }
 
   .tx-info h4 {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     word-break: break-word;
   }
 
@@ -1341,7 +1358,7 @@ input[type="file"].form-control::file-selector-button:hover {
     justify-content: space-between;
     align-items: center;
     border-top: 1px dashed var(--border-color);
-    padding-top: 10px;
+    padding-top: 8px;
   }
 
   .tx-actions {
@@ -1353,13 +1370,15 @@ input[type="file"].form-control::file-selector-button:hover {
   }
 
   .modal-overlay {
-    padding: 10px;
+    padding: 8px;
+    align-items: center;
   }
 
   .modal-container {
-    padding: 20px 14px;
+    padding: 16px 12px;
     width: 100%;
-    max-height: 92vh;
+    max-width: 96vw;
+    max-height: 88vh;
     border-radius: var(--radius-md);
   }
 
@@ -1373,8 +1392,14 @@ input[type="file"].form-control::file-selector-button:hover {
     justify-content: center;
   }
 
+  #notificationDropdown {
+    right: -10px !important;
+    width: calc(100vw - 32px) !important;
+    max-width: 320px !important;
+  }
+
   .chart-container {
-    height: 210px;
+    height: 200px;
   }
 
   .sub-tab-actions {
@@ -1388,7 +1413,7 @@ input[type="file"].form-control::file-selector-button:hover {
   }
 
   .calendar-days-header div {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     padding: 4px 2px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1396,18 +1421,18 @@ input[type="file"].form-control::file-selector-button:hover {
   }
 
   .calendar-day {
-    min-height: 52px;
-    padding: 4px;
+    min-height: 48px;
+    padding: 2px;
   }
 
   .calendar-day .day-number {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
   }
 
   .calendar-day .day-income,
   .calendar-day .day-expense {
-    font-size: 0.62rem;
-    padding: 1px 3px;
+    font-size: 0.6rem;
+    padding: 1px 2px;
   }
 }
 
@@ -1420,16 +1445,19 @@ input[type="file"].form-control::file-selector-button:hover {
   }
 
   .header-actions {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
-  .header-actions .btn-primary,
-  .header-actions .btn-secondary {
-    width: 100%;
+  .header-actions #openAddTransactionBtn {
+    grid-column: span 1;
   }
 
   .card-amount {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
+  }
+
+  .main-wrapper {
+    padding: 12px 8px;
   }
 }
 

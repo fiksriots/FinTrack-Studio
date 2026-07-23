@@ -221,27 +221,45 @@ function setupCurrencyInputs() {
 }
 
 // Collapsible & Mobile Sidebar Setup (Unifikasi Tombol Garis 3 Navbar)
-function setupSidebarToggles() {
+window.toggleMobileSidebar = function(forceClose = false) {
   const sidebar = document.getElementById('appSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (!sidebar || !overlay) return;
+
+  if (window.innerWidth >= 1024) {
+    sidebar.classList.toggle('collapsed');
+  } else {
+    if (forceClose) {
+      sidebar.classList.remove('mobile-open');
+      overlay.classList.remove('active');
+    } else {
+      const isOpen = sidebar.classList.contains('mobile-open');
+      if (isOpen) {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('active');
+      } else {
+        sidebar.classList.add('mobile-open');
+        overlay.classList.add('active');
+      }
+    }
+  }
+};
+
+function setupSidebarToggles() {
   const overlay = document.getElementById('sidebarOverlay');
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
 
   if (mobileMenuBtn) {
-    mobileMenuBtn.addEventListener('click', () => {
-      if (window.innerWidth >= 1024) {
-        sidebar.classList.toggle('collapsed');
-      } else {
-        sidebar.classList.toggle('mobile-open');
-        overlay.classList.toggle('active');
-      }
-    });
+    mobileMenuBtn.onclick = function(e) {
+      if (e) e.stopPropagation();
+      window.toggleMobileSidebar();
+    };
   }
 
   if (overlay) {
-    overlay.addEventListener('click', () => {
-      sidebar.classList.remove('mobile-open');
-      overlay.classList.remove('active');
-    });
+    overlay.onclick = function() {
+      window.toggleMobileSidebar(true);
+    };
   }
 }
 

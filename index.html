@@ -19,7 +19,7 @@
   <div class="bg-glow-2"></div>
 
   <!-- Mobile Sidebar Overlay -->
-  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="window.toggleMobileSidebar(true)"></div>
 
   <div class="app-container">
     <!-- Sidebar Navigation -->
@@ -112,7 +112,7 @@
       <!-- Top Header (Main Page Navbar Title) -->
       <header class="top-header">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <button type="button" class="btn-icon mobile-menu-btn" id="mobileMenuBtn" title="Buka / Tutup Menu Sidebar" onclick="(function(){var s=document.getElementById('appSidebar'),o=document.getElementById('sidebarOverlay');if(window.innerWidth>=1024){s.classList.toggle('collapsed')}else{s.classList.toggle('mobile-open');o.classList.toggle('active')}})();">
+          <button type="button" class="btn-icon mobile-menu-btn" id="mobileMenuBtn" title="Buka / Tutup Menu Sidebar" onclick="window.toggleMobileSidebar()">
             <i class="fa-solid fa-bars"></i>
           </button>
           <div class="page-title">
