@@ -3491,3 +3491,227 @@ window.restoreFromGoogleDriveFile = function(fileId, fileName) {
     showToast('Gagal me-restore berkas dari Google Drive.', 'danger');
   });
 };
+
+// --------------------------------------------------------------------------
+// PDF FINANCIAL REPORT GENERATOR & PRINT SUITE
+// --------------------------------------------------------------------------
+window.generatePdfReport = function(e) {
+  if (e) e.preventDefault();
+
+  const range = document.getElementById('pdfPeriodSelect') ? document.getElementById('pdfPeriodSelect').value : 'this-month';
+  const includeSummary = document.getElementById('pdfIncludeSummary') ? document.getElementById('pdfIncludeSummary').checked : true;
+  const includeCategories = document.getElementById('pdfIncludeCategories') ? document.getElementById('pdfIncludeCategories').checked : true;
+  const includeWallets = document.getElementById('pdfIncludeWallets') ? document.getElementById('pdfIncludeWallets').checked : true;
+  const includeTx = document.getElementById('pdfIncludeTransactions') ? document.getElementById('pdfIncludeTransactions').checked : true;
+
+  const now = new Date();
+  const currentMonthStr = now.toISOString().slice(0, 7);
+  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthStr = lastMonthDate.toISOString().slice(0, 7);
+
+  let periodLabel = 'Seluruh Histori Transaksi';
+  if (range === 'this-month') periodLabel = now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  if (range === 'last-month') periodLabel = lastMonthDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  if (range === 'this-year') periodLabel = 'Tahun ' + now.getFullYear();
+
+  const filtered = (transactions || []).filter(t => {
+    if (range === 'this-month' && (!t.date || !t.date.startsWith(currentMonthStr))) return false;
+    if (range === 'last-month' && (!t.date || !t.date.startsWith(lastMonthStr))) return false;
+    if (range === 'this-year' && (!t.date || !t.date.startsWith(now.getFullYear().toString()))) return false;
+    return true;
+  });
+
+  let totalIncome = 0;
+  let totalExpense = 0;
+  const categoryTotals = {};
+
+  filtered.forEach(t => {
+    if (t.type === 'income' || t.type === 'transfer_in') {
+      totalIncome += t.amount;
+    } else {
+      totalExpense += t.amount;
+      categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
+    }
+  });
+
+  let totalBalance = 0;
+  (wallets || []).forEach(w => { totalBalance += (w.initialBalance || 0); });
+  (transactions || []).forEach(t => {
+    if (t.type === 'income') totalBalance += t.amount;
+    else if (t.type === 'expense') totalBalance -= t.amount;
+  });
+
+  const netFlow = totalIncome - totalExpense;
+
+  const printWin = window.open('', '_blank');
+  if (!printWin) {
+    showToast('Izinkan pop-up browser untuk mencetak PDF laporan.', 'warning');
+    return;
+  }
+
+  const printDoc = printWin.document;
+  printDoc.open();
+  printDoc.write(`
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+      <meta charset="UTF-8">
+      <title>Laporan Keuangan - FinTrack Studio (${periodLabel})</title>
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+      <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { padding: 32px; color: #1e293b; background: #fff; line-height: 1.5; font-size: 13px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #6366f1; padding-bottom: 16px; margin-bottom: 24px; }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand-icon { width: 38px; height: 38px; background: #6366f1; color: #fff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; }
+        .brand-title { font-size: 20px; font-weight: 800; color: #0f172a; }
+        .brand-sub { font-size: 11px; color: #64748b; font-weight: 600; }
+        .report-meta { text-align: right; font-size: 12px; color: #475569; }
+        .report-meta h2 { font-size: 16px; font-weight: 800; color: #6366f1; margin-bottom: 2px; }
+        
+        .section-title { font-size: 13px; font-weight: 800; color: #0f172a; margin: 24px 0 10px 0; border-left: 4px solid #6366f1; padding-left: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+        .summary-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; }
+        .summary-card .label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .summary-card .val { font-size: 15px; font-weight: 800; margin-top: 4px; color: #0f172a; }
+        .summary-card.inc .val { color: #10b981; }
+        .summary-card.exp .val { color: #f43f5e; }
+        .summary-card.net .val { color: #6366f1; }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
+        th { background: #f1f5f9; text-align: left; padding: 8px 10px; font-weight: 700; color: #334155; border-bottom: 2px solid #cbd5e1; }
+        td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; color: #334155; }
+        tr:nth-child(even) td { background: #fafafa; }
+        
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .badge.income { background: #dcfce7; color: #15803d; }
+        .badge.expense { background: #ffe4e6; color: #be123c; }
+
+        .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; }
+        @media print {
+          body { padding: 0; }
+          @page { margin: 1.5cm; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="brand">
+          <div class="brand-icon">F</div>
+          <div>
+            <div class="brand-title">FinTrack Studio</div>
+            <div class="brand-sub">Laporan Keuangan Pribadi Eksekutif</div>
+          </div>
+        </div>
+        <div class="report-meta">
+          <h2>LAPORAN KEUANGAN</h2>
+          <div>Periode: <strong>${periodLabel}</strong></div>
+          <div>Tanggal Cetak: ${now.toLocaleString('id-ID')}</div>
+        </div>
+      </div>
+
+      ${includeSummary ? `
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="label">Total Saldo Bersih</div>
+            <div class="val">${formatRupiah(totalBalance)}</div>
+          </div>
+          <div class="summary-card inc">
+            <div class="label">Total Pemasukan</div>
+            <div class="val">+${formatRupiah(totalIncome)}</div>
+          </div>
+          <div class="summary-card exp">
+            <div class="label">Total Pengeluaran</div>
+            <div class="val">-${formatRupiah(totalExpense)}</div>
+          </div>
+          <div class="summary-card net">
+            <div class="label">Net Cashflow</div>
+            <div class="val" style="color: ${netFlow >= 0 ? '#10b981' : '#f43f5e'}">${formatRupiah(netFlow)}</div>
+          </div>
+        </div>
+      ` : ''}
+
+      ${includeWallets ? `
+        <div class="section-title">Rincian Saldo Dompet & Rekening Bank</div>
+        <table>
+          <thead>
+            <tr><th>Nama Dompet</th><th>Tipe Akun</th><th style="text-align: right;">Saldo Saat Ini</th></tr>
+          </thead>
+          <tbody>
+            ${(wallets || []).map(w => {
+              let bal = w.initialBalance || 0;
+              (transactions || []).forEach(t => {
+                if (t.wallet === w.name) {
+                  if (t.type === 'income' || t.type === 'transfer_in') bal += t.amount;
+                  else bal -= t.amount;
+                }
+              });
+              return `<tr><td><strong>${w.name}</strong></td><td>${w.type}</td><td style="text-align: right; font-weight: 700;">${formatRupiah(bal)}</td></tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      ` : ''}
+
+      ${includeCategories && Object.keys(categoryTotals).length > 0 ? `
+        <div class="section-title">Rincian Pengeluaran per Kategori Utama</div>
+        <table>
+          <thead>
+            <tr><th>Kategori Pengeluaran</th><th style="text-align: right;">Total Pengeluaran</th><th style="text-align: right;">Porsi (%)</th></tr>
+          </thead>
+          <tbody>
+            ${Object.entries(categoryTotals).sort((a,b) => b[1] - a[1]).map(([cat, amt]) => {
+              const pct = totalExpense > 0 ? Math.round((amt / totalExpense) * 100) : 0;
+              return `<tr><td><strong>${cat}</strong></td><td style="text-align: right; color: #f43f5e; font-weight: 700;">${formatRupiah(amt)}</td><td style="text-align: right;">${pct}%</td></tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      ` : ''}
+
+      ${includeTx ? `
+        <div class="section-title">Daftar Rincian Transaksi (${filtered.length} Transaksi)</div>
+        <table>
+          <thead>
+            <tr><th>Tanggal</th><th>Tipe</th><th>Kategori / Sub</th><th>Dompet</th><th>Catatan</th><th style="text-align: right;">Nominal</th></tr>
+          </thead>
+          <tbody>
+            ${filtered.length === 0 ? `<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 20px;">Tidak ada catatan transaksi pada periode ini.</td></tr>` : ''}
+            ${filtered.map(t => {
+              const isInc = t.type === 'income' || t.type === 'transfer_in';
+              const badgeClass = isInc ? 'income' : 'expense';
+              const typeLabel = t.type === 'transfer_in' ? 'Transfer Masuk' : (t.type === 'transfer_out' ? 'Transfer Keluar' : (isInc ? 'Pemasukan' : 'Pengeluaran'));
+              return `
+                <tr>
+                  <td>${t.date || '-'}</td>
+                  <td><span class="badge ${badgeClass}">${typeLabel}</span></td>
+                  <td><strong>${t.category}</strong> ${t.subCategory ? `<br><small style="color:#64748b;">${t.subCategory}</small>` : ''}</td>
+                  <td>${t.wallet}</td>
+                  <td>${t.note || '-'} ${t.tags ? `<small style="color:#6366f1;">${t.tags}</small>` : ''}</td>
+                  <td style="text-align: right; font-weight: 800; color: ${isInc ? '#10b981' : '#f43f5e'};">${isInc ? '+' : '-'}${formatRupiah(t.amount)}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      ` : ''}
+
+      <div class="footer">
+        <div>Disusun & Dicetak Otomatis oleh FinTrack Studio App</div>
+        <div>Dokumen Laporan Keuangan Pribadi</div>
+      </div>
+
+      <script>
+        window.onload = function() {
+          setTimeout(function() {
+            window.print();
+          }, 400);
+        };
+      </script>
+    </body>
+    </html>
+  `);
+  printDoc.close();
+
+  closeModal('pdfReportModal');
+  showToast('Jendela cetak Laporan PDF telah dibuka!', 'success');
+};

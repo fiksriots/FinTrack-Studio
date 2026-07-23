@@ -30,6 +30,7 @@
 - **Hierarki Kategori & Sub-Kategori**: Pencatatan spesifik hingga ke sub-kategori.
 - **Tag & Hashtag**: Penandaan khusus untuk pengelompokan transaksi (contoh: `#LiburanBali`, `#ProjectX`).
 - **Filter & Pencarian Lanjutan**: Filter berdasarkan Tipe (Pemasukan/Pengeluaran), Kategori, Rentang Waktu (Bulan Ini, Bulan Lalu, Tahun Ini, Semua Waktu), dan kata kunci pencarian.
+- **📄 Cetak & Ekspor PDF Laporan**: Fitur pembuatan Laporan Keuangan Eksekutif berformat PDF siap cetak dengan pilihan periode dan opsi komponen kustom (Ringkasan Eksekutif, Rincian Dompet, Rincian Pengeluaran per Kategori, dan Tabel Transaksi Lengkap).
 
 ### 📅 4. Kalender Keuangan Bulanan
 - Tampilan kalender harian interaktif untuk memantau rekam pemasukan dan pengeluaran harian secara visual.

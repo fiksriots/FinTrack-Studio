@@ -285,6 +285,9 @@
             <button type="button" class="btn-secondary" id="resetFiltersBtn" onclick="(function(){var s=document.getElementById('searchInput');var t=document.getElementById('typeFilter');var c=document.getElementById('categoryFilter');var d=document.getElementById('dateRangeFilter');if(s)s.value='';if(t)t.value='all';if(c)c.value='all';if(d)d.value='this-month';renderTransactionsList();})()">
               <i class="fa-solid fa-arrow-rotate-left"></i> Reset Filter
             </button>
+            <button type="button" class="btn-primary" id="openPdfReportBtn" onclick="openModal('pdfReportModal')" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+              <i class="fa-solid fa-file-pdf"></i> Cetak / PDF
+            </button>
           </div>
         </div>
 
@@ -1123,6 +1126,9 @@
             <button type="button" class="btn-secondary" id="exportJsonBtn" onclick="exportToJSON()">
               <i class="fa-solid fa-code"></i> Unduh JSON Backup
             </button>
+            <button type="button" class="btn-secondary" style="border-color: #ef4444; color: #ef4444;" onclick="closeModal('backupModal'); openModal('pdfReportModal');">
+              <i class="fa-solid fa-file-pdf"></i> Cetak Laporan PDF
+            </button>
           </div>
         </div>
 
@@ -1172,6 +1178,52 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL GENERATOR LAPORAN PDF -->
+  <div class="modal-overlay" id="pdfReportModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-file-pdf" style="color: #ef4444;"></i> Cetak Laporan Keuangan PDF</h3>
+        <button type="button" class="close-btn" onclick="closeModal('pdfReportModal')">&times;</button>
+      </div>
+      <form id="pdfReportForm" onsubmit="window.generatePdfReport(event)">
+        <div class="form-group">
+          <label for="pdfPeriodSelect">Pilih Periode Laporan</label>
+          <select id="pdfPeriodSelect" class="form-control" required>
+            <option value="this-month">Bulan Ini (Default)</option>
+            <option value="last-month">Bulan Lalu</option>
+            <option value="this-year">Tahun Ini</option>
+            <option value="all">Seluruh Histori Transaksi</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Komponen Yang Disertakan dalam Laporan</label>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">
+              <input type="checkbox" id="pdfIncludeSummary" checked> Ringkasan Eksekutif (Saldo, Income, Expense, Netflow)
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">
+              <input type="checkbox" id="pdfIncludeCategories" checked> Rincian Pengeluaran per Kategori Utama
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">
+              <input type="checkbox" id="pdfIncludeWallets" checked> Rincian Saldo Dompet & Rekening Bank
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">
+              <input type="checkbox" id="pdfIncludeTransactions" checked> Tabel Rincian Transaksi Lengkap
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('pdfReportModal')">Batal</button>
+          <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+            <i class="fa-solid fa-print"></i> Generate & Cetak PDF
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
