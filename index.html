@@ -1264,7 +1264,7 @@
             <button type="button" class="btn-secondary" id="loadDemoDataBtn" onclick="window.loadDemoData(true); closeModal('backupModal');">
               <i class="fa-solid fa-database"></i> Muat Data Contoh (Demo)
             </button>
-            <button type="button" class="btn-secondary" style="border-color: var(--expense-border); color: var(--expense);" id="clearAllDataBtn" onclick="if(confirm('Apakah Anda yakin ingin mengosongkan SELURUH database keuangan? Tindakan ini tidak dapat dibatalkan.')){ transactions=[]; wallets=[]; budgets=[]; savingsGoals=[]; debts=[]; recurringTxs=[]; categories=JSON.parse(JSON.stringify(INITIAL_CATEGORIES)); saveState(); renderAllViews(); closeModal('backupModal'); showToast('Seluruh database berhasil dikosongkan.','danger'); }">
+            <button type="button" class="btn-secondary" style="border-color: var(--expense-border); color: var(--expense);" id="clearAllDataBtn" onclick="if(confirm('Apakah Anda yakin ingin mengosongkan SELURUH database keuangan? Tindakan ini tidak dapat dibatalkan.')){ window.clearAllDatabaseData(); }">
               <i class="fa-solid fa-trash-can"></i> Kosongkan Database
             </button>
           </div>

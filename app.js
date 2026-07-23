@@ -315,6 +315,30 @@ window.loadDemoData = function(notify = true) {
   }
 };
 
+window.clearAllDatabaseData = function() {
+  transactions = [];
+  wallets = [];
+  budgets = [];
+  savingsGoals = [];
+  debts = [];
+  recurringTxs = [];
+  categories = JSON.parse(JSON.stringify(INITIAL_CATEGORIES));
+
+  localStorage.setItem('fintrack_transactions', JSON.stringify([]));
+  localStorage.setItem('fintrack_wallets', JSON.stringify([]));
+  localStorage.setItem('fintrack_budgets', JSON.stringify([]));
+  localStorage.setItem('fintrack_categories', JSON.stringify(categories));
+  localStorage.setItem('fintrack_goals', JSON.stringify([]));
+  localStorage.setItem('fintrack_debts', JSON.stringify([]));
+  localStorage.setItem('fintrack_recurring', JSON.stringify([]));
+  localStorage.setItem('fintrack_initialized', 'true');
+
+  closeModal('backupModal');
+  populateDropdowns();
+  renderAllViews();
+  showToast('Seluruh database dan saldo berhasil dikosongkan (Rp 0).', 'danger');
+};
+
 // State Persistence
 function saveState() {
   ensureStateSchemaSafety();
