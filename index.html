@@ -21,6 +21,40 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- PIN Security Lock Overlay -->
+  <div id="pinLockOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f172a; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; color: #fff;">
+    <div style="text-align: center; max-width: 320px; width: 90%;">
+      <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--primary), #ec4899); border-radius: 16px; margin: 0 auto 16px auto; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; box-shadow: var(--shadow-glow);">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h2 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 4px;">FinTrack Security</h2>
+      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 24px;">Masukkan 4-digit PIN keamanan Anda</p>
+      
+      <div id="pinDots" style="display: flex; justify-content: center; gap: 16px; margin-bottom: 28px;">
+        <span class="pin-dot" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border-color); background: transparent;"></span>
+        <span class="pin-dot" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border-color); background: transparent;"></span>
+        <span class="pin-dot" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border-color); background: transparent;"></span>
+        <span class="pin-dot" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border-color); background: transparent;"></span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">
+        <button type="button" onclick="window.enterPinDigit('1')" style="padding: 14px; font-size: 1.25rem; font-weight: 700; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: #fff; cursor: pointer;">1</button>
+        <button type="button" onclick="window.enterPinDigit('2')" style="padding: 14px; font-size: 1.25rem; font-weight: 700; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: #fff; cursor: pointer;">2</button>
+        <button type="button" onclick="window.enterPinDigit('3')" style="padding: 14px; font-size: 1.25rem; font-weight: 700; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: #fff; cursor: pointer;">3</button>
+        <button type="button" onclick="window.enterPinDigit('4')" style="padding: 14px; font-size: 1.25rem; font-weight: 700; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: #fff; cursor: pointer;">4</button>
+        <button type="button" onclick="window.enterPinDigit('5')" style="padding: 14px; font-size: 1.25rem; font-weight: 700; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: #fff; cursor: pointer;">5</button>
+        <button type="button" onclick="window.enterPinDigit('6')" style="padding: 14px; font-size: 1.25rem; font-weight: 700; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: #fff; cursor: pointer;">6</button>
+        <button type="button" onclick="window.enterPinDigit('7')" style="padding: 14px; font-size: 1.25rem; font-weight: 700; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: #fff; cursor: pointer;">7</button>
+        <button type="button" onclick="window.enterPinDigit('8')" style="padding: 14px; font-size: 1.25rem; font-weight: 700; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: #fff; cursor: pointer;">8</button>
+        <button type="button" onclick="window.enterPinDigit('9')" style="padding: 14px; font-size: 1.25rem; font-weight: 700; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: #fff; cursor: pointer;">9</button>
+        <button type="button" onclick="window.clearPinInput()" style="padding: 14px; font-size: 0.9rem; font-weight: 700; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-muted); cursor: pointer;">C</button>
+        <button type="button" onclick="window.enterPinDigit('0')" style="padding: 14px; font-size: 1.25rem; font-weight: 700; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: #fff; cursor: pointer;">0</button>
+        <button type="button" onclick="window.deletePinDigit()" style="padding: 14px; font-size: 1.1rem; font-weight: 700; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: #ef4444; cursor: pointer;"><i class="fa-solid fa-delete-left"></i></button>
+      </div>
+      <div id="pinErrorMsg" style="font-size: 0.8rem; color: #ef4444; min-height: 20px;"></div>
+    </div>
+  </div>
+
   <!-- Ambient Glow Backgrounds -->
   <div class="bg-glow-1"></div>
   <div class="bg-glow-2"></div>
@@ -213,6 +247,9 @@
           </div>
         </div>
 
+        <!-- Smart AI Financial Insights Container -->
+        <div id="smartInsightsContainer" style="margin-bottom: 20px;"></div>
+
         <!-- Month-over-Month Comparison & Health Card Grid -->
         <div class="dashboard-widgets-grid">
           <!-- Month Comparison Card -->
@@ -294,6 +331,15 @@
           </div>
         </div>
 
+        <!-- Year-over-Year (YoY) 12 Months Summary Table Card -->
+        <div class="card-panel" style="margin-bottom: 20px;">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-calendar-week" style="color: var(--primary);"></i> Matriks Rekapitulasi Tahunan (12 Bulan)</h3>
+            <span class="card-subtext" id="yoyYearLabel">Tahun Berjalan</span>
+          </div>
+          <div id="yoyTableContainer" style="overflow-x: auto;"></div>
+        </div>
+
         <!-- Recent Transactions -->
         <div class="card-panel">
           <div class="panel-header">
@@ -333,6 +379,15 @@
               <i class="fa-solid fa-file-pdf"></i> Cetak / PDF
             </button>
           </div>
+        </div>
+
+        <!-- Hashtag Analytics Panel -->
+        <div class="card-panel" style="margin-bottom: 20px;">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-hashtag" style="color: var(--primary);"></i> Analisis Pengeluaran per Hashtag (#Tag)</h3>
+            <span class="card-subtext">Akumulasi pengeluaran berdasarkan label #hashtag</span>
+          </div>
+          <div id="hashtagAnalyticsContainer"></div>
         </div>
 
         <div class="card-panel">
@@ -1284,6 +1339,24 @@
             </button>
             <button type="button" class="btn-secondary" style="border-color: var(--expense-border); color: var(--expense);" id="clearAllDataBtn" onclick="if(confirm('Apakah Anda yakin ingin mengosongkan SELURUH database keuangan? Tindakan ini tidak dapat dibatalkan.')){ window.clearAllDatabaseData(); }">
               <i class="fa-solid fa-trash-can"></i> Kosongkan Database
+            </button>
+          </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color);">
+
+        <div>
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px;"><i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> 5. Keamanan PIN & Kurs Real-Time</h4>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">Atur kunci sandi PIN 4-digit untuk melindungi aplikasi, atau aktifkan Notifikasi Push &amp; Kurs Mata Uang API.</p>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button type="button" class="btn-secondary" id="setupPinBtn" onclick="window.setupPinSecurity()">
+              <i class="fa-solid fa-key"></i> <span id="pinBtnText">Atur Kunci PIN (4-Digit)</span>
+            </button>
+            <button type="button" class="btn-secondary" id="fetchFxBtn" onclick="window.updateLiveExchangeRates(true)">
+              <i class="fa-solid fa-rotate"></i> Update Kurs Real-time API
+            </button>
+            <button type="button" class="btn-secondary" id="requestPushNotifBtn" onclick="window.requestNotificationPermission()">
+              <i class="fa-solid fa-bell"></i> Aktifkan Push Notification
             </button>
           </div>
         </div>

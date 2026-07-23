@@ -193,6 +193,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   } catch(e) { console.warn('state init error:', e); }
 
+  try { checkPinLockStatus(); } catch(e) { console.warn('checkPinLockStatus error:', e); }
+  try { updatePinBtnUI(); } catch(e) { console.warn('updatePinBtnUI error:', e); }
   try { updatePrivacyUI(); } catch(e) { console.warn('updatePrivacyUI error:', e); }
   try { setupNavigation(); } catch(e) { console.warn('setupNavigation error:', e); }
   try { setupSidebarToggles(); } catch(e) { console.warn('setupSidebarToggles error:', e); }
@@ -1481,6 +1483,9 @@ function renderAllViews() {
   const safeRender = (fn, name) => { try { fn(); } catch(e) { console.warn(`render error [${name}]:`, e); } };
   safeRender(renderSummaryCards, 'SummaryCards');
   safeRender(renderSmartAlerts, 'SmartAlerts');
+  safeRender(renderSmartInsights, 'SmartInsights');
+  safeRender(renderYoYTable, 'YoYTable');
+  safeRender(renderHashtagAnalytics, 'HashtagAnalytics');
   safeRender(renderMonthComparisonCard, 'MonthComparison');
   safeRender(renderFinancialHealth, 'FinancialHealth');
   safeRender(renderCashflowStatement, 'CashflowStatement');
@@ -4112,3 +4117,437 @@ window.handlePensionSubmit = function(e) {
     `;
   }
 };
+
+// --------------------------------------------------------------------------
+// 1. SMART AI FINANCIAL INSIGHTS WIDGET
+// --------------------------------------------------------------------------
+function renderSmartInsights() {
+  const container = document.getElementById('smartInsightsContainer');
+  if (!container) return;
+
+  const now = new Date();
+  const currentMonthStr = now.toISOString().slice(0, 7);
+  
+  const lastMonthObj = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthStr = lastMonthObj.toISOString().slice(0, 7);
+
+  let curIncome = 0, curExpense = 0;
+  let lastExpense = 0;
+  const categoryExpenses = {};
+
+  (transactions || []).forEach(t => {
+    if (t.date && t.date.startsWith(currentMonthStr)) {
+      if (t.type === 'income') curIncome += t.amount;
+      if (t.type === 'expense') {
+        curExpense += t.amount;
+        const cat = t.category || 'Lain-lain';
+        categoryExpenses[cat] = (categoryExpenses[cat] || 0) + t.amount;
+      }
+    } else if (t.date && t.date.startsWith(lastMonthStr)) {
+      if (t.type === 'expense') lastExpense += t.amount;
+    }
+  });
+
+  const insights = [];
+
+  // Insight 1: Savings Rate / Net Surplus
+  const netSurplus = curIncome - curExpense;
+  const savingsRate = curIncome > 0 ? Math.round((netSurplus / curIncome) * 100) : 0;
+  if (curIncome > 0 && savingsRate >= 20) {
+    insights.push({
+      icon: 'fa-trophy',
+      color: 'var(--income)',
+      bg: 'var(--income-bg)',
+      border: 'var(--income-border)',
+      title: 'Kinerja Tabungan Sangat Baik!',
+      desc: `Rasio tabungan Anda bulan ini mencapai <strong>${savingsRate}%</strong> (${formatRupiah(netSurplus)}). Ini sudah melampaui target ideal (20%). Pertahankan!`
+    });
+  } else if (curIncome > 0 && savingsRate < 0) {
+    insights.push({
+      icon: 'fa-triangle-exclamation',
+      color: 'var(--expense)',
+      bg: 'var(--expense-bg)',
+      border: 'var(--expense-border)',
+      title: 'Peringatan Defisit Keuangan!',
+      desc: `Pengeluaran bulan ini melebihi pemasukan sebesar <strong>${formatRupiah(Math.abs(netSurplus))}</strong>. Evaluasi pengeluaran non-pokok Anda.`
+    });
+  }
+
+  // Insight 2: Category Top Spending
+  let topCat = null, topCatAmount = 0;
+  Object.keys(categoryExpenses).forEach(cat => {
+    if (categoryExpenses[cat] > topCatAmount) {
+      topCatAmount = categoryExpenses[cat];
+      topCat = cat;
+    }
+  });
+  if (topCat && curExpense > 0) {
+    const percent = Math.round((topCatAmount / curExpense) * 100);
+    insights.push({
+      icon: 'fa-chart-pie',
+      color: 'var(--primary)',
+      bg: 'rgba(99, 102, 241, 0.1)',
+      border: 'rgba(99, 102, 241, 0.25)',
+      title: `Pengeluaran Terbesar: ${topCat}`,
+      desc: `Kategori <strong>${topCat}</strong> memakan <strong>${percent}%</strong> (${formatRupiah(topCatAmount)}) dari total pengeluaran Anda bulan ini.`
+    });
+  }
+
+  // Insight 3: Low Wallet Balances Warning
+  const lowWallets = (wallets || []).filter(w => {
+    let bal = w.initialBalance || 0;
+    (transactions || []).forEach(t => {
+      if (t.wallet === w.name) {
+        if (t.type === 'income') bal += t.amount;
+        if (t.type === 'expense') bal -= t.amount;
+      }
+    });
+    return bal < 100000 && bal > 0;
+  });
+
+  if (lowWallets.length > 0) {
+    const walletNames = lowWallets.map(w => w.name).join(', ');
+    insights.push({
+      icon: 'fa-wallet',
+      color: '#f59e0b',
+      bg: 'rgba(245, 158, 11, 0.1)',
+      border: 'rgba(245, 158, 11, 0.25)',
+      title: 'Peringatan Saldo Dompet Rendah',
+      desc: `Saldo pada dompet <strong>${walletNames}</strong> di bawah Rp 100.000. Pertimbangkan untuk melakukan top-up.`
+    });
+  }
+
+  if (insights.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  let html = `
+    <div style="padding: 16px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
+      <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i>
+        <span>AI Smart Financial Insights</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+  `;
+
+  insights.forEach(item => {
+    html += `
+      <div style="padding: 12px 14px; background: ${item.bg}; border: 1px solid ${item.border}; border-radius: var(--radius-md); display: flex; gap: 12px; align-items: flex-start;">
+        <div style="width: 36px; height: 36px; border-radius: 10px; background: ${item.color}; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;">
+          <i class="fa-solid ${item.icon}"></i>
+        </div>
+        <div>
+          <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-bottom: 3px;">${item.title}</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">${item.desc}</div>
+        </div>
+      </div>
+    `;
+  });
+
+  html += `</div></div>`;
+  container.innerHTML = html;
+}
+
+// --------------------------------------------------------------------------
+// 2. YEAR-OVER-YEAR (YoY) 12 MONTHS RECAPITULATION MATRIX
+// --------------------------------------------------------------------------
+function renderYoYTable() {
+  const container = document.getElementById('yoyTableContainer');
+  if (!container) return;
+
+  const currentYear = calendarCurrentDate ? calendarCurrentDate.getFullYear() : new Date().getFullYear();
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  
+  const monthlyData = Array.from({ length: 12 }, () => ({ income: 0, expense: 0 }));
+
+  (transactions || []).forEach(t => {
+    if (t.date && t.date.length >= 7) {
+      const year = parseInt(t.date.slice(0, 4));
+      const monthIdx = parseInt(t.date.slice(5, 7)) - 1;
+      if (year === currentYear && monthIdx >= 0 && monthIdx < 12) {
+        if (t.type === 'income') monthlyData[monthIdx].income += t.amount;
+        if (t.type === 'expense') monthlyData[monthIdx].expense += t.amount;
+      }
+    }
+  });
+
+  let totalYrIncome = 0, totalYrExpense = 0;
+  monthlyData.forEach(m => {
+    totalYrIncome += m.income;
+    totalYrExpense += m.expense;
+  });
+
+  let html = `
+    <table class="table-custom" style="width: 100%; min-width: 650px; font-size: 0.82rem;">
+      <thead>
+        <tr>
+          <th>Bulan</th>
+          <th style="text-align: right;">Pemasukan (+)</th>
+          <th style="text-align: right;">Pengeluaran (-)</th>
+          <th style="text-align: right;">Net Surplus</th>
+          <th style="text-align: center;">Savings Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  monthlyData.forEach((m, idx) => {
+    const net = m.income - m.expense;
+    const sRate = m.income > 0 ? Math.round((net / m.income) * 100) : 0;
+    const netColor = net >= 0 ? 'var(--income)' : 'var(--expense)';
+
+    html += `
+      <tr>
+        <td><strong>${monthNames[idx]} ${currentYear}</strong></td>
+        <td style="text-align: right; color: var(--income);" class="privacy-target">${formatRupiah(m.income)}</td>
+        <td style="text-align: right; color: var(--expense);" class="privacy-target">${formatRupiah(m.expense)}</td>
+        <td style="text-align: right; color: ${netColor}; font-weight: 700;" class="privacy-target">${formatRupiah(net)}</td>
+        <td style="text-align: center;">
+          <span style="padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; background: ${sRate >= 20 ? 'var(--income-bg)' : 'var(--bg-main)'}; color: ${sRate >= 20 ? 'var(--income)' : 'var(--text-muted)'}; border: 1px solid ${sRate >= 20 ? 'var(--income-border)' : 'var(--border-color)'};">
+            ${sRate}%
+          </span>
+        </td>
+      </tr>
+    `;
+  });
+
+  const totalNet = totalYrIncome - totalYrExpense;
+  const avgIncome = Math.round(totalYrIncome / 12);
+  const avgExpense = Math.round(totalYrExpense / 12);
+
+  html += `
+      <tr style="background: var(--bg-glass); font-weight: 800; border-top: 2px solid var(--border-color);">
+        <td>TOTAL TAHUNAN</td>
+        <td style="text-align: right; color: var(--income);" class="privacy-target">${formatRupiah(totalYrIncome)}</td>
+        <td style="text-align: right; color: var(--expense);" class="privacy-target">${formatRupiah(totalYrExpense)}</td>
+        <td style="text-align: right; color: ${totalNet >= 0 ? 'var(--income)' : 'var(--expense)'};" class="privacy-target">${formatRupiah(totalNet)}</td>
+        <td style="text-align: center;">-</td>
+      </tr>
+      <tr style="background: var(--bg-main); font-size: 0.78rem; color: var(--text-muted);">
+        <td>RATA-RATA BULANAN</td>
+        <td style="text-align: right;" class="privacy-target">${formatRupiah(avgIncome)}</td>
+        <td style="text-align: right;" class="privacy-target">${formatRupiah(avgExpense)}</td>
+        <td style="text-align: right;" class="privacy-target">${formatRupiah(Math.round(totalNet / 12))}</td>
+        <td style="text-align: center;">-</td>
+      </tr>
+      </tbody>
+    </table>
+  `;
+
+  container.innerHTML = html;
+  const labelEl = document.getElementById('yoyYearLabel');
+  if (labelEl) labelEl.innerText = `Tahun ${currentYear}`;
+}
+
+// --------------------------------------------------------------------------
+// 3. HASHTAG ANALYTICS TRACKER (#Hashtag)
+// --------------------------------------------------------------------------
+function renderHashtagAnalytics() {
+  const container = document.getElementById('hashtagAnalyticsContainer');
+  if (!container) return;
+
+  const hashtagMap = {};
+
+  (transactions || []).forEach(t => {
+    if (t.tags) {
+      const matches = t.tags.match(/#[a-zA-Z0-9_]+/g);
+      if (matches) {
+        matches.forEach(tag => {
+          const cleanTag = tag.toLowerCase();
+          if (!hashtagMap[cleanTag]) {
+            hashtagMap[cleanTag] = { income: 0, expense: 0, count: 0 };
+          }
+          hashtagMap[cleanTag].count += 1;
+          if (t.type === 'income') hashtagMap[cleanTag].income += t.amount;
+          if (t.type === 'expense') hashtagMap[cleanTag].expense += t.amount;
+        });
+      }
+    }
+  });
+
+  const tags = Object.keys(hashtagMap);
+  if (tags.length === 0) {
+    container.innerHTML = `
+      <div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.82rem;">
+        Belum ada hashtag ditemukan. Tambahkan #hashtag (contoh: <em>#Kuliner, #Liburan</em>) pada catatan transaksi Anda.
+      </div>
+    `;
+    return;
+  }
+
+  let html = `<div style="display: flex; gap: 10px; flex-wrap: wrap;">`;
+
+  tags.forEach(tag => {
+    const data = hashtagMap[tag];
+    html += `
+      <div style="padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.82rem; display: flex; flex-direction: column; gap: 4px; min-width: 150px; flex: 1;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <strong style="color: var(--primary); font-size: 0.88rem;">${tag}</strong>
+          <span style="font-size: 0.72rem; color: var(--text-muted); background: var(--bg-main); padding: 2px 6px; border-radius: 8px;">${data.count}x</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.78rem;">
+          <span style="color: var(--expense);" class="privacy-target">-${formatRupiah(data.expense)}</span>
+          ${data.income > 0 ? `<span style="color: var(--income);" class="privacy-target">+${formatRupiah(data.income)}</span>` : ''}
+        </div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+// --------------------------------------------------------------------------
+// 4. PIN 4-DIGIT SECURITY LOCK MANAGER
+// --------------------------------------------------------------------------
+let enteredPinBuffer = '';
+
+window.checkPinLockStatus = function() {
+  const savedPin = localStorage.getItem('fintrack_pin');
+  const pinOverlay = document.getElementById('pinLockOverlay');
+  if (savedPin && pinOverlay) {
+    pinOverlay.style.display = 'flex';
+  } else if (pinOverlay) {
+    pinOverlay.style.display = 'none';
+  }
+};
+
+window.enterPinDigit = function(digit) {
+  if (enteredPinBuffer.length < 4) {
+    enteredPinBuffer += digit;
+    updatePinDotsUI();
+    if (enteredPinBuffer.length === 4) {
+      setTimeout(() => verifyPinInput(), 150);
+    }
+  }
+};
+
+window.deletePinDigit = function() {
+  if (enteredPinBuffer.length > 0) {
+    enteredPinBuffer = enteredPinBuffer.slice(0, -1);
+    updatePinDotsUI();
+  }
+};
+
+window.clearPinInput = function() {
+  enteredPinBuffer = '';
+  updatePinDotsUI();
+};
+
+function updatePinDotsUI() {
+  const dots = document.querySelectorAll('.pin-dot');
+  const errEl = document.getElementById('pinErrorMsg');
+  if (errEl) errEl.innerText = '';
+  dots.forEach((dot, idx) => {
+    if (idx < enteredPinBuffer.length) {
+      dot.style.background = 'var(--primary)';
+      dot.style.borderColor = 'var(--primary)';
+    } else {
+      dot.style.background = 'transparent';
+      dot.style.borderColor = 'var(--border-color)';
+    }
+  });
+}
+
+function verifyPinInput() {
+  const savedPin = localStorage.getItem('fintrack_pin');
+  if (enteredPinBuffer === savedPin) {
+    const pinOverlay = document.getElementById('pinLockOverlay');
+    if (pinOverlay) pinOverlay.style.display = 'none';
+    enteredPinBuffer = '';
+    updatePinDotsUI();
+    showToast('Aplikasi FinTrack Studio berhasil dibuka!', 'success');
+  } else {
+    const errEl = document.getElementById('pinErrorMsg');
+    if (errEl) errEl.innerText = 'PIN Salah. Silahkan coba lagi.';
+    enteredPinBuffer = '';
+    updatePinDotsUI();
+  }
+}
+
+window.setupPinSecurity = function() {
+  const currentPin = localStorage.getItem('fintrack_pin');
+  if (currentPin) {
+    if (confirm('Aplikasi saat ini dilindungi PIN. Apakah Anda ingin MENGHAPUS kunci PIN ini?')) {
+      localStorage.removeItem('fintrack_pin');
+      showToast('Kunci PIN berhasil dihapus.', 'info');
+      updatePinBtnUI();
+    }
+  } else {
+    const newPin = prompt('Masukkan 4-digit PIN baru untuk mengunci aplikasi FinTrack:');
+    if (newPin && newPin.length === 4 && !isNaN(newPin)) {
+      localStorage.setItem('fintrack_pin', newPin);
+      showToast('Kunci PIN 4-digit berhasil diaktifkan!', 'success');
+      updatePinBtnUI();
+    } else if (newPin) {
+      alert('PIN harus berupa 4 angka numerik!');
+    }
+  }
+};
+
+function updatePinBtnUI() {
+  const btnText = document.getElementById('pinBtnText');
+  if (btnText) {
+    const hasPin = !!localStorage.getItem('fintrack_pin');
+    btnText.innerText = hasPin ? 'Hapus Kunci PIN (Aktif)' : 'Atur Kunci PIN (4-Digit)';
+  }
+}
+
+// --------------------------------------------------------------------------
+// 5. LIVE EXCHANGE RATES API (Real-time FX Rates)
+// --------------------------------------------------------------------------
+window.updateLiveExchangeRates = async function(notify = true) {
+  try {
+    if (notify) showToast('Menghubungkan ke API Kurs Mata Uang Real-time...', 'info');
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    const data = await res.json();
+    if (data && data.rates && data.rates.IDR) {
+      const usdIdr = data.rates.IDR;
+      const eurIdr = usdIdr / (data.rates.EUR || 0.92);
+      const sgdIdr = usdIdr / (data.rates.SGD || 1.34);
+      const jpyIdr = usdIdr / (data.rates.JPY || 155);
+      const sarIdr = usdIdr / (data.rates.SAR || 3.75);
+
+      CURRENCY_RATES['USD'] = Math.round(usdIdr);
+      CURRENCY_RATES['EUR'] = Math.round(eurIdr);
+      CURRENCY_RATES['SGD'] = Math.round(sgdIdr);
+      CURRENCY_RATES['JPY'] = Math.round(jpyIdr);
+      CURRENCY_RATES['SAR'] = Math.round(sarIdr);
+
+      localStorage.setItem('fintrack_fx_rates', JSON.stringify(CURRENCY_RATES));
+      renderAllViews();
+      if (notify) showToast(`Kurs Real-Time Berhasil Diperbarui! (1 USD = ${formatRupiah(usdIdr)})`, 'success');
+    }
+  } catch(e) {
+    console.warn('FX Rate Fetch error:', e);
+    if (notify) showToast('Menggunakan Kurs Statis Terakhir.', 'warning');
+  }
+};
+
+// --------------------------------------------------------------------------
+// 6. WEB PUSH NOTIFICATION & LOCAL ALARM MANAGER
+// --------------------------------------------------------------------------
+window.requestNotificationPermission = function() {
+  if (!('Notification' in window)) {
+    showToast('Browser Anda tidak mendukung Web Push Notifications.', 'warning');
+    return;
+  }
+  Notification.requestPermission().then(permission => {
+    if (permission === 'granted') {
+      showToast('Notifikasi Push berhasil diaktifkan di HP/Browser Anda!', 'success');
+      sendDeviceNotification('FinTrack Studio Connected', 'Notifikasi pengingat tagihan & hutang aktif.');
+    } else {
+      showToast('Izin notifikasi ditolak oleh pengguna.', 'warning');
+    }
+  });
+};
+
+function sendDeviceNotification(title, body) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, {
+      body: body,
+      icon: 'https://cdn-icons-png.flaticon.com/512/2845/2845894.png'
+    });
+  }
+}
