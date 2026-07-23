@@ -107,14 +107,16 @@ const DEFAULT_RECURRING = [
   }
 ];
 
-// App State
-let transactions = JSON.parse(localStorage.getItem('fintrack_transactions')) || null;
-let wallets = JSON.parse(localStorage.getItem('fintrack_wallets')) || null;
-let budgets = JSON.parse(localStorage.getItem('fintrack_budgets')) || null;
-let categories = JSON.parse(localStorage.getItem('fintrack_categories')) || null;
-let savingsGoals = JSON.parse(localStorage.getItem('fintrack_goals')) || null;
-let debts = JSON.parse(localStorage.getItem('fintrack_debts')) || null;
-let recurringTxs = JSON.parse(localStorage.getItem('fintrack_recurring')) || null;
+// App State Persistence Check
+const isAppInitialized = localStorage.getItem('fintrack_initialized') === 'true';
+
+let transactions = JSON.parse(localStorage.getItem('fintrack_transactions'));
+let wallets = JSON.parse(localStorage.getItem('fintrack_wallets'));
+let budgets = JSON.parse(localStorage.getItem('fintrack_budgets'));
+let categories = JSON.parse(localStorage.getItem('fintrack_categories'));
+let savingsGoals = JSON.parse(localStorage.getItem('fintrack_goals'));
+let debts = JSON.parse(localStorage.getItem('fintrack_debts'));
+let recurringTxs = JSON.parse(localStorage.getItem('fintrack_recurring'));
 
 let currentTheme = localStorage.getItem('fintrack_theme') || 'dark';
 let isPrivacyHidden = JSON.parse(localStorage.getItem('fintrack_privacy')) || false;
@@ -126,12 +128,16 @@ let categoryChartInstance = null;
 
 function ensureStateSchemaSafety() {
   if (!transactions || !Array.isArray(transactions)) transactions = [];
-  if (!wallets || !Array.isArray(wallets) || wallets.length === 0) wallets = JSON.parse(JSON.stringify(DEFAULT_WALLETS));
-  if (!budgets || !Array.isArray(budgets) || budgets.length === 0) budgets = JSON.parse(JSON.stringify(DEFAULT_BUDGETS));
+  if (!wallets || !Array.isArray(wallets)) {
+    wallets = !isAppInitialized ? JSON.parse(JSON.stringify(DEFAULT_WALLETS)) : [];
+  }
+  if (!budgets || !Array.isArray(budgets)) {
+    budgets = !isAppInitialized ? JSON.parse(JSON.stringify(DEFAULT_BUDGETS)) : [];
+  }
   if (!categories || typeof categories !== 'object' || !categories.expense || !categories.income) categories = JSON.parse(JSON.stringify(INITIAL_CATEGORIES));
-  if (!savingsGoals || !Array.isArray(savingsGoals)) savingsGoals = JSON.parse(JSON.stringify(DEFAULT_GOALS));
-  if (!debts || !Array.isArray(debts)) debts = JSON.parse(JSON.stringify(DEFAULT_DEBTS));
-  if (!recurringTxs || !Array.isArray(recurringTxs)) recurringTxs = JSON.parse(JSON.stringify(DEFAULT_RECURRING));
+  if (!savingsGoals || !Array.isArray(savingsGoals)) savingsGoals = [];
+  if (!debts || !Array.isArray(debts)) debts = [];
+  if (!recurringTxs || !Array.isArray(recurringTxs)) recurringTxs = [];
 
   // Auto-migrate legacy budget objects
   budgets = budgets.map((b, idx) => {
@@ -170,13 +176,15 @@ function ensureStateSchemaSafety() {
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
   try { initTheme(); } catch(e) { console.warn('initTheme error:', e); }
-  try { ensureStateSchemaSafety(); } catch(e) { console.warn('ensureStateSchemaSafety error:', e); }
 
   try {
-    if (!transactions || transactions.length === 0 || !wallets || wallets.length === 0) {
+    if (!isAppInitialized) {
       window.loadDemoData(false);
+      localStorage.setItem('fintrack_initialized', 'true');
+    } else {
+      ensureStateSchemaSafety();
     }
-  } catch(e) { console.warn('loadDemoData error:', e); }
+  } catch(e) { console.warn('state init error:', e); }
 
   try { updatePrivacyUI(); } catch(e) { console.warn('updatePrivacyUI error:', e); }
   try { setupNavigation(); } catch(e) { console.warn('setupNavigation error:', e); }
@@ -318,6 +326,8 @@ function saveState() {
   localStorage.setItem('fintrack_debts', JSON.stringify(debts));
   localStorage.setItem('fintrack_recurring', JSON.stringify(recurringTxs));
   localStorage.setItem('fintrack_privacy', JSON.stringify(isPrivacyHidden));
+  localStorage.setItem('fintrack_theme', currentTheme);
+  localStorage.setItem('fintrack_initialized', 'true');
 }
 
 // Privacy Mode Manager
