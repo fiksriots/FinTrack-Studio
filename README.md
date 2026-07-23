@@ -66,10 +66,11 @@
 - Bebas menambah Kategori Utama dan Sub-Kategori baru.
 - Kustomisasi ikon FontAwesome dan warna indikator kategori.
 
-### 🔒 11. Privasi, Tema & Backup Data
+### 🔒 11. Privasi, Tema & Backup Data (Cloud & Local)
 - **Mode Privasi**: Sembunyikan/tampilkan nominal saldo (`Rp ••••••••`) dengan 1 klik.
 - **Mode Gelap / Terang (Dark / Light Mode)**: Tampilan visual modern yang nyaman di mata.
-- **Ekspor & Impor Data**: Fitur Backup data ke format **JSON** dan **CSV**, serta Restore dari file JSON backup.
+- **Sync Cloud (Google Drive)**: Integrasi langsung dengan Google Drive untuk menyimpan dan memulihkan cadangan data JSON secara terenkripsi & terisolasi di cloud pribadi Anda.
+- **Ekspor & Impor Data Lokal**: Fitur Backup data ke format **JSON** dan **CSV**, serta Restore dari file JSON backup.
 - **Data Demo**: Pilihan untuk memuat data simulasi bagi pengguna baru.
 
 ---
