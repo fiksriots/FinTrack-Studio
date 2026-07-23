@@ -212,6 +212,38 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// PWA Installation Manager
+let deferredPwaPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPwaPrompt = e;
+  const pwaContainer = document.getElementById('pwaInstallContainer');
+  if (pwaContainer) {
+    pwaContainer.style.display = 'block';
+  }
+});
+
+window.installPWAApp = function() {
+  if (!deferredPwaPrompt) {
+    if (typeof showToast === 'function') {
+      showToast('Buka menu Chrome di HP Android lalu pilih "Tambahkan ke Layar Utama" (Add to Home Screen).', 'info');
+    } else {
+      alert('Buka menu Chrome di HP Android lalu pilih "Tambahkan ke Layar Utama" (Add to Home Screen).');
+    }
+    return;
+  }
+  deferredPwaPrompt.prompt();
+  deferredPwaPrompt.userChoice.then((choiceResult) => {
+    if (choiceResult.outcome === 'accepted') {
+      if (typeof showToast === 'function') showToast('Aplikasi FinTrack Studio berhasil diinstall di HP Android Anda!', 'success');
+      const pwaContainer = document.getElementById('pwaInstallContainer');
+      if (pwaContainer) pwaContainer.style.display = 'none';
+    }
+    deferredPwaPrompt = null;
+  });
+};
+
 // Thousand Separator Real-time Formatting Helpers
 function formatNumberWithDots(val) {
   if (val === null || val === undefined || val === '') return '';
