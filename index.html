@@ -104,6 +104,12 @@
             <span>Dompet & Rekening</span>
           </button>
         </li>
+        <li class="nav-item" style="margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+          <button type="button" title="Panduan & Bantuan" onclick="openModal('helpGuideModal')">
+            <i class="fa-solid fa-circle-question" style="color: var(--primary);"></i>
+            <span>Panduan & Bantuan</span>
+          </button>
+        </li>
       </ul>
 
       <div class="sidebar-footer">
@@ -1358,6 +1364,40 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn-secondary" onclick="closeModal('viewReceiptModal')">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PANDUAN & BANTUAN -->
+  <div class="modal-overlay" id="helpGuideModal">
+    <div class="modal-container" style="max-width: 620px; max-height: 88vh;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-book-open" style="color: var(--primary);"></i> Panduan Penggunaan FinTrack Studio</h3>
+        <button type="button" class="close-btn" onclick="closeModal('helpGuideModal')">&times;</button>
+      </div>
+      <div style="padding: 10px 0; overflow-y: auto; max-height: 65vh; font-size: 0.85rem; line-height: 1.6; color: var(--text-main);">
+        <div style="padding: 12px; background: var(--bg-glass); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 12px;">
+          <h4 style="color: var(--primary); font-size: 0.95rem; margin-bottom: 4px;"><i class="fa-solid fa-mobile-screen-button"></i> 1. Cara Install di HP Android (PWA)</h4>
+          <p>Buka web ini di Google Chrome HP Android &rarr; klik tombol <strong>Install App Android</strong> di sidebar (atau klik titik 3 Chrome &rarr; pilih <em>Add to Home Screen</em>). Aplikasi akan terpasang di HP Anda &amp; bisa digunakan 100% offline!</p>
+        </div>
+
+        <div style="padding: 12px; background: var(--bg-glass); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 12px;">
+          <h4 style="color: #4285F4; font-size: 0.95rem; margin-bottom: 4px;"><i class="fa-brands fa-google-drive"></i> 2. Cara Backup &amp; Sync Google Drive</h4>
+          <p>Buka menu <strong>Database &amp; Backup</strong> &rarr; bagian <em>3. Sync Cloud</em> &rarr; klik <strong>Hubungkan Google</strong>. Setelah terhubung, klik <strong>Backup ke Google Drive</strong> untuk menyimpan cadangan ke cloud pribadi Anda secara aman.</p>
+        </div>
+
+        <div style="padding: 12px; background: var(--bg-glass); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 12px;">
+          <h4 style="color: #ef4444; font-size: 0.95rem; margin-bottom: 4px;"><i class="fa-solid fa-file-pdf"></i> 3. Cetak Laporan Keuangan PDF</h4>
+          <p>Buka menu <strong>Transaksi</strong> atau <strong>Database &amp; Backup</strong> &rarr; klik <strong>Cetak Laporan PDF</strong>. Anda bisa memilih periode (Bulan Ini, Tahun Ini, dll) &amp; mencetak dokumen laporan eksekutif resmi.</p>
+        </div>
+
+        <div style="padding: 12px; background: var(--bg-glass); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 12px;">
+          <h4 style="color: #10b981; font-size: 0.95rem; margin-bottom: 4px;"><i class="fa-solid fa-receipt"></i> 4. Lampiran Struk &amp; Fitur Lainnya</h4>
+          <p>Saat menambah transaksi, Anda bisa melampirkan foto nota/struk belanjaan. Gunakan juga tombol <strong>Privasi</strong> di header untuk mengaburkan saldo saat berada di tempat umum.</p>
+        </div>
+      </div>
+      <div class="modal-footer" style="margin-top: 10px;">
+        <button type="button" class="btn-primary" onclick="closeModal('helpGuideModal')">Tutup Panduan</button>
       </div>
     </div>
   </div>
