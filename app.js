@@ -446,6 +446,69 @@ function initFirebaseRealtimeSync() {
       }
     });
 
+    // Realtime Debts Listener
+    bookDoc.collection("debts").onSnapshot((snapshot) => {
+      let changed = false;
+      snapshot.docChanges().forEach((change) => {
+        const d = change.doc.data();
+        if (change.type === "added" || change.type === "modified") {
+          const idx = debts.findIndex(item => item.id === d.id);
+          if (idx >= 0) debts[idx] = d;
+          else debts.push(d);
+          changed = true;
+        } else if (change.type === "removed") {
+          debts = debts.filter(item => item.id !== d.id);
+          changed = true;
+        }
+      });
+      if (changed) {
+        saveStateLocalOnly();
+        renderAllViews();
+      }
+    });
+
+    // Realtime Budgets Listener
+    bookDoc.collection("budgets").onSnapshot((snapshot) => {
+      let changed = false;
+      snapshot.docChanges().forEach((change) => {
+        const b = change.doc.data();
+        if (change.type === "added" || change.type === "modified") {
+          const idx = budgets.findIndex(item => item.id === b.id);
+          if (idx >= 0) budgets[idx] = b;
+          else budgets.push(b);
+          changed = true;
+        } else if (change.type === "removed") {
+          budgets = budgets.filter(item => item.id !== b.id);
+          changed = true;
+        }
+      });
+      if (changed) {
+        saveStateLocalOnly();
+        renderAllViews();
+      }
+    });
+
+    // Realtime Goals Listener
+    bookDoc.collection("goals").onSnapshot((snapshot) => {
+      let changed = false;
+      snapshot.docChanges().forEach((change) => {
+        const g = change.doc.data();
+        if (change.type === "added" || change.type === "modified") {
+          const idx = savingsGoals.findIndex(item => item.id === g.id);
+          if (idx >= 0) savingsGoals[idx] = g;
+          else savingsGoals.push(g);
+          changed = true;
+        } else if (change.type === "removed") {
+          savingsGoals = savingsGoals.filter(item => item.id !== g.id);
+          changed = true;
+        }
+      });
+      if (changed) {
+        saveStateLocalOnly();
+        renderAllViews();
+      }
+    });
+
     console.log("Firebase Realtime Sync Active for FinTrack Web");
   } catch (e) {
     console.warn("Firebase Init Error:", e);
@@ -464,6 +527,24 @@ function syncWalletToFirestore(wallet) {
   }
 }
 
+function syncDebtToFirestore(debt) {
+  if (firebaseDb) {
+    firebaseDb.collection("books").doc("default").collection("debts").doc(debt.id).set(debt, { merge: true });
+  }
+}
+
+function syncBudgetToFirestore(budget) {
+  if (firebaseDb) {
+    firebaseDb.collection("books").doc("default").collection("budgets").doc(budget.id).set(budget, { merge: true });
+  }
+}
+
+function syncGoalToFirestore(goal) {
+  if (firebaseDb) {
+    firebaseDb.collection("books").doc("default").collection("goals").doc(goal.id).set(goal, { merge: true });
+  }
+}
+
 // State Persistence
 function saveState() {
   ensureStateSchemaSafety();
@@ -473,6 +554,9 @@ function saveState() {
   if (firebaseDb) {
     transactions.forEach(tx => syncTxToFirestore(tx));
     wallets.forEach(w => syncWalletToFirestore(w));
+    debts.forEach(d => syncDebtToFirestore(d));
+    budgets.forEach(b => syncBudgetToFirestore(b));
+    savingsGoals.forEach(g => syncGoalToFirestore(g));
   }
 }
 
