@@ -205,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try { setupCurrencyInputs(); } catch(e) { console.warn('setupCurrencyInputs error:', e); }
   try { populateDropdowns(); } catch(e) { console.warn('populateDropdowns error:', e); }
   try { renderAllViews(); } catch(e) { console.warn('renderAllViews error:', e); }
+  try { initFirebaseRealtimeSync(); } catch(e) { console.warn('initFirebaseRealtimeSync error:', e); }
 
   window.addEventListener('resize', () => {
     try {
@@ -380,9 +381,102 @@ window.clearAllDatabaseData = function() {
   showToast('Seluruh database dan saldo berhasil dikosongkan (Rp 0).', 'danger');
 };
 
+// Firebase Real-time Firestore Sync Engine
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBCjCmKNcnIbM4M7BfwgoPkyYkeWIb2ZUY",
+  authDomain: "fintrack-studio-9e8a5.firebaseapp.com",
+  projectId: "fintrack-studio-9e8a5",
+  storageBucket: "fintrack-studio-9e8a5.firebasestorage.app",
+  messagingSenderId: "662177345819",
+  appId: "1:662177345819:web:fintrackstudioweb"
+};
+
+let firebaseDb = null;
+
+function initFirebaseRealtimeSync() {
+  if (typeof firebase === 'undefined' || !firebase.firestore) return;
+
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp(FIREBASE_CONFIG);
+    }
+    firebaseDb = firebase.firestore();
+    const bookDoc = firebaseDb.collection("books").doc("default");
+
+    // Realtime Transactions Listener from Android
+    bookDoc.collection("transactions").onSnapshot((snapshot) => {
+      let changed = false;
+      snapshot.docChanges().forEach((change) => {
+        const tx = change.doc.data();
+        if (change.type === "added" || change.type === "modified") {
+          const idx = transactions.findIndex(t => t.id === tx.id);
+          if (idx >= 0) transactions[idx] = tx;
+          else transactions.unshift(tx);
+          changed = true;
+        } else if (change.type === "removed") {
+          transactions = transactions.filter(t => t.id !== tx.id);
+          changed = true;
+        }
+      });
+      if (changed) {
+        saveStateLocalOnly();
+        renderAllViews();
+      }
+    });
+
+    // Realtime Wallets Listener
+    bookDoc.collection("wallets").onSnapshot((snapshot) => {
+      let changed = false;
+      snapshot.docChanges().forEach((change) => {
+        const w = change.doc.data();
+        if (change.type === "added" || change.type === "modified") {
+          const idx = wallets.findIndex(val => val.name === w.name || val.id === w.id);
+          if (idx >= 0) wallets[idx] = w;
+          else wallets.push(w);
+          changed = true;
+        } else if (change.type === "removed") {
+          wallets = wallets.filter(val => val.name !== w.name && val.id !== w.id);
+          changed = true;
+        }
+      });
+      if (changed) {
+        saveStateLocalOnly();
+        populateDropdowns();
+        renderAllViews();
+      }
+    });
+
+    console.log("Firebase Realtime Sync Active for FinTrack Web");
+  } catch (e) {
+    console.warn("Firebase Init Error:", e);
+  }
+}
+
+function syncTxToFirestore(tx) {
+  if (firebaseDb) {
+    firebaseDb.collection("books").doc("default").collection("transactions").doc(tx.id).set(tx, { merge: true });
+  }
+}
+
+function syncWalletToFirestore(wallet) {
+  if (firebaseDb) {
+    firebaseDb.collection("books").doc("default").collection("wallets").doc(wallet.name).set(wallet, { merge: true });
+  }
+}
+
 // State Persistence
 function saveState() {
   ensureStateSchemaSafety();
+  saveStateLocalOnly();
+
+  // Sync Outgoing Changes to Firebase Cloud
+  if (firebaseDb) {
+    transactions.forEach(tx => syncTxToFirestore(tx));
+    wallets.forEach(w => syncWalletToFirestore(w));
+  }
+}
+
+function saveStateLocalOnly() {
   localStorage.setItem('fintrack_transactions', JSON.stringify(transactions));
   localStorage.setItem('fintrack_wallets', JSON.stringify(wallets));
   localStorage.setItem('fintrack_budgets', JSON.stringify(budgets));
