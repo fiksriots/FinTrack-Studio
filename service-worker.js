@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fintrack-studio-v8-7-5';
+const CACHE_NAME = 'fintrack-studio-v8-7-6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

@@ -648,7 +648,9 @@ function getCategoryMeta(catName) {
 }
 
 // Navigation Tabs Manager
-function setupNavigation() {
+window.switchTab = function(tabId) {
+  if (!tabId) return;
+
   const navItems = document.querySelectorAll('.nav-item');
   const tabContents = document.querySelectorAll('.tab-content');
   const sidebar = document.getElementById('appSidebar');
@@ -658,41 +660,61 @@ function setupNavigation() {
     dashboard: { title: 'Dashboard Keuangan', sub: 'Pantau ringkasan saldo, statistik, dan analisis kesehatan keuangan Anda' },
     transactions: { title: 'Daftar Transaksi', sub: 'Kelola, cari, dan filter seluruh rekam pencatatan keuangan' },
     calendar: { title: 'Kalender Keuangan Bulanan', sub: 'Pantau riwayat pemasukan dan pengeluaran harian dalam tampilan kalender' },
-    goals: { title: 'Target Tabungan & Impian', sub: 'Rencanakan pencapaian keuangan dan tabungan masa depan' },
     debts: { title: 'Pencatatan Hutang & Piutang', sub: 'Kelola uang pinjaman dan piutang teman/keluarga' },
+    budgets: { title: 'Batas Anggaran Bulanan', sub: 'Kendalikan pengeluaran dengan batas budget bulanan' },
+    goals: { title: 'Target Tabungan & Impian', sub: 'Rencanakan pencapaian keuangan dan tabungan masa depan' },
     recurring: { title: 'Transaksi Rutin & Berulang', sub: 'Otomatiskan pencatatan tagihan bulanan dan gaji' },
-    calculators: { title: 'Kalkulator Keuangan', sub: 'Hitung kewajiban Zakat Maal dan estimasi simulasi cicilan KPR / Kredit' },
-    budgets: { title: 'Anggaran & Target', sub: 'Kendalikan pengeluaran dengan batas budget bulanan' },
-    categories: { title: 'Manajemen Kategori & Sub-Kategori', sub: 'Kelola hierarki kategori pengeluaran dan pemasukan' },
-    wallets: { title: 'Dompet & Laporan', sub: 'Atur rekening bank, e-wallet, serta ekspor/impor data' }
+    wallets: { title: 'Dompet & Rekening Bank', sub: 'Atur rekening bank, e-wallet, serta batas limit' },
+    categories: { title: 'Manajemen Kategori & Tag', sub: 'Kelola hierarki kategori pengeluaran dan tag' },
+    reports: { title: 'Laporan & Ekspor PDF/CSV', sub: 'Grafik analisis dan ekspor dokumen laporan resmi' },
+    backup: { title: 'Database & Realtime Cloud Sync', sub: 'Status sinkronisasi Firebase Firestore & Google Drive Backup' }
   };
 
+  navItems.forEach(n => {
+    if (n.getAttribute('data-tab') === tabId) {
+      n.classList.add('active');
+    } else {
+      n.classList.remove('active');
+    }
+  });
+
+  tabContents.forEach(c => {
+    if (c.id === tabId) {
+      c.classList.add('active');
+      c.style.display = 'block';
+    } else {
+      c.classList.remove('active');
+      c.style.display = 'none';
+    }
+  });
+
+  const headingEl = document.getElementById('currentPageTitle') || document.getElementById('pageTitleHeading');
+  const subEl = document.getElementById('currentPageSub') || document.getElementById('pageSubTitle');
+
+  if (pageHeadings[tabId]) {
+    if (headingEl) headingEl.innerText = pageHeadings[tabId].title;
+    if (subEl) subEl.innerText = pageHeadings[tabId].sub;
+  }
+
+  if (sidebar && overlay && window.innerWidth < 1024) {
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('active');
+  }
+
+  setTimeout(() => renderCharts(), 50);
+};
+
+function setupNavigation() {
+  const navItems = document.querySelectorAll('.nav-item');
   navItems.forEach(item => {
     item.addEventListener('click', () => {
       const tabId = item.getAttribute('data-tab');
-
-      navItems.forEach(n => n.classList.remove('active'));
-      tabContents.forEach(c => c.classList.remove('active'));
-
-      item.classList.add('active');
-      document.getElementById(tabId).classList.add('active');
-
-      if (pageHeadings[tabId]) {
-        document.getElementById('pageTitleHeading').innerText = pageHeadings[tabId].title;
-        document.getElementById('pageSubTitle').innerText = pageHeadings[tabId].sub;
-      }
-
-      if (window.innerWidth < 1024) {
-        sidebar.classList.remove('mobile-open');
-        overlay.classList.remove('active');
-      }
-
-      setTimeout(() => renderCharts(), 50);
+      window.switchTab(tabId);
     });
   });
 
   document.getElementById('viewAllTxBtn')?.addEventListener('click', () => {
-    document.querySelector('[data-tab="transactions"]').click();
+    window.switchTab('transactions');
   });
 }
 
