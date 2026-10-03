@@ -2410,7 +2410,8 @@ window.openTxModalById = function(id) {
 };
 
 function renderDashboardTxList() {
-  const container = document.getElementById('dashboardTxList');
+  const container = document.getElementById('dashboardTxList') || document.getElementById('recentTxList');
+  if (!container) return;
   const recent = (transactions || []).slice(0, 5);
 
   if (recent.length === 0) {
@@ -2430,7 +2431,8 @@ function renderDashboardTxList() {
 
 // Enhanced Search & Date Filter in Transactions List
 function renderTransactionsList() {
-  const container = document.getElementById('allTransactionsList');
+  const container = document.getElementById('allTransactionsList') || document.getElementById('transactionsList');
+  if (!container) return;
   const searchInput = document.getElementById('searchInput');
   const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
   const type = document.getElementById('typeFilter') ? document.getElementById('typeFilter').value : 'all';
