@@ -879,6 +879,13 @@ function openModal(id) { const el = document.getElementById(id); if (el) el.clas
 function closeModal(id) { const el = document.getElementById(id); if (el) el.classList.remove('active'); }
 function closeTxModal() { closeModal('transactionModal'); }
 
+window.openAddTxModal = function(tx = null, defaultDate = null) { openTxModal(tx, defaultDate); };
+window.openAddGoalModal = function() { openModal('goalModal'); };
+window.openAddDebtModal = function() { if (typeof openDebtModal === 'function') openDebtModal(); else openModal('debtModal'); };
+window.openAddRecurringModal = function() { if (typeof openRecurringModal === 'function') openRecurringModal(); else openModal('recurringModal'); };
+window.openAddWalletModal = function() { openModal('walletModal'); };
+window.openAddBudgetModal = function() { openModal('budgetModal'); };
+
 function openTxModal(tx = null, defaultDate = null) {
   const form = document.getElementById('transactionForm');
   form.reset();
