@@ -107,6 +107,11 @@ const DEFAULT_RECURRING = [
   }
 ];
 
+// Calendar dates follow the user's timezone; export timestamps remain UTC.
+function localDateString(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 // App State Persistence Check
 const isAppInitialized = localStorage.getItem('fintrack_initialized') === 'true';
 
@@ -615,6 +620,7 @@ function toggleTheme() {
 
 function updateThemeBtnUI() {
   const themeLabel = document.getElementById('themeLabel');
+  if (!themeLabel) return;
   if (currentTheme === 'dark') {
     themeLabel.innerHTML = '<i class="fa-solid fa-moon"></i> Mode Gelap';
   } else {
@@ -732,10 +738,12 @@ function setupEventListeners() {
 
   // Calendar Navigation
   safeAddEventListener('prevMonthBtn', 'click', () => {
+    calendarCurrentDate.setDate(1);
     calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
     renderCalendarView();
   });
   safeAddEventListener('nextMonthBtn', 'click', () => {
+    calendarCurrentDate.setDate(1);
     calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
     renderCalendarView();
   });
@@ -887,6 +895,10 @@ window.openAddWalletModal = function() { openModal('walletModal'); };
 window.openAddBudgetModal = function() { openModal('budgetModal'); };
 
 function openTxModal(tx = null, defaultDate = null) {
+  if (tx && (tx.type === 'transfer_in' || tx.type === 'transfer_out')) {
+    showToast('Untuk mengubah transfer, hapus pasangan transfer lalu buat transfer baru.', 'info');
+    return;
+  }
   const form = document.getElementById('transactionForm');
   form.reset();
   const typeExpenseBtn = document.getElementById('typeExpenseBtn');
@@ -931,7 +943,7 @@ function openTxModal(tx = null, defaultDate = null) {
     document.getElementById('modalTxTitle').innerText = 'Tambah Transaksi';
     document.getElementById('txId').value = '';
     document.getElementById('txCurrency').value = 'IDR';
-    document.getElementById('txDate').value = defaultDate || new Date().toISOString().split('T')[0];
+    document.getElementById('txDate').value = defaultDate || localDateString();
     typeExpenseBtn.className = 'type-btn active expense';
     typeIncomeBtn.className = 'type-btn income';
     populateCategoryDropdown('expense');
@@ -1076,9 +1088,10 @@ function populateParentCategoryDropdown() {
 
 // Smart Financial Alerts Analyzer
 function renderSmartAlerts() {
+  if (!document.getElementById('smartAlertsContainer')) return;
   const container = document.getElementById('smartAlertsContainer');
   let alertHtml = '';
-  const currentMonthStr = new Date().toISOString().slice(0, 7);
+  const currentMonthStr = localDateString().slice(0, 7);
 
   const today = new Date();
   (debts || []).forEach(d => {
@@ -1119,12 +1132,13 @@ function renderSmartAlerts() {
 
 // Month-over-Month Comparison Card
 function renderMonthComparisonCard() {
+  if (!document.getElementById('monthComparisonContainer')) return;
   const container = document.getElementById('monthComparisonContainer');
 
   const now = new Date();
-  const currentMonthStr = now.toISOString().slice(0, 7);
+  const currentMonthStr = localDateString(now).slice(0, 7);
   const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthStr = lastMonthDate.toISOString().slice(0, 7);
+  const lastMonthStr = localDateString(lastMonthDate).slice(0, 7);
 
   let thisExp = 0, lastExp = 0;
 
@@ -1187,7 +1201,7 @@ function renderCalendarView() {
     html += `<div class="calendar-cell empty"></div>`;
   }
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateString();
 
   for (let day = 1; day <= totalDays; day++) {
     const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -1286,7 +1300,7 @@ function handleGoalSubmit(e) {
     newGoal.deposits.push({
       id: 'dep-' + Date.now(),
       amount: currentAmount,
-      date: new Date().toISOString().split('T')[0],
+      date: localDateString(),
       wallet: defaultWallet,
       note: 'Saldo Awal Terkumpul'
     });
@@ -1305,7 +1319,7 @@ function handleGoalDepositSubmit(e) {
   const id = document.getElementById('depositGoalId').value;
   const amount = parseFormattedNumber(document.getElementById('depositAmountInput').value);
   const walletName = document.getElementById('depositWalletSelect').value;
-  const dateStr = document.getElementById('depositDateInput').value || new Date().toISOString().split('T')[0];
+  const dateStr = document.getElementById('depositDateInput').value || localDateString();
   const noteStr = document.getElementById('depositNoteInput').value.trim();
 
   if (amount <= 0) {
@@ -1354,7 +1368,7 @@ function handleGoalWithdrawSubmit(e) {
   const id = document.getElementById('withdrawGoalId').value;
   const amount = parseFormattedNumber(document.getElementById('withdrawAmountInput').value);
   const walletName = document.getElementById('withdrawWalletSelect').value;
-  const dateStr = document.getElementById('withdrawDateInput').value || new Date().toISOString().split('T')[0];
+  const dateStr = document.getElementById('withdrawDateInput').value || localDateString();
   const noteStr = document.getElementById('withdrawNoteInput').value.trim();
 
   if (amount <= 0) {
@@ -1444,7 +1458,7 @@ function handleDebtSubmit(e) {
     category: 'Hutang & Piutang',
     subCategory: isHutang ? 'Pinjaman Masuk' : 'Pinjaman Keluar',
     wallet: walletName,
-    date: new Date().toISOString().split('T')[0],
+    date: localDateString(),
     note: `[${isHutang ? 'Hutang Baru' : 'Piutang Baru'}] ${person}${note ? ' - ' + note : ''}`,
     tags: isHutang ? '#Hutang' : '#Piutang'
   };
@@ -1462,7 +1476,7 @@ function handleDebtPaySubmit(e) {
   const id = document.getElementById('payDebtId').value;
   const amount = parseFormattedNumber(document.getElementById('payAmountInput').value);
   const walletName = document.getElementById('payWalletSelect').value;
-  const dateStr = document.getElementById('payDateInput').value || new Date().toISOString().split('T')[0];
+  const dateStr = document.getElementById('payDateInput').value || localDateString();
 
   if (amount <= 0) {
     showToast('Masukkan nominal pembayaran yang valid.', 'warning');
@@ -1677,8 +1691,9 @@ function handleCategorySubmit(e) {
 }
 
 function deleteTransaction(id) {
-  if (confirm('Hapus transaksi ini?')) {
-    transactions = transactions.filter(t => t.id !== id);
+  const selected = transactions.find(t => t.id === id);
+  if (confirm(selected?.linkedTransferId ? 'Hapus kedua catatan transfer ini? Saldo kedua dompet akan dikembalikan.' : 'Hapus transaksi ini?')) {
+    transactions = transactions.filter(t => t.id !== id && (!selected?.linkedTransferId || t.linkedTransferId !== selected.linkedTransferId));
     saveState();
     renderAllViews();
     showToast('Transaksi telah dihapus.', 'danger');
@@ -1712,7 +1727,7 @@ function renderAllViews() {
 
 // Summary Cards Render
 function renderSummaryCards() {
-  const currentMonthStr = new Date().toISOString().slice(0, 7);
+  const currentMonthStr = localDateString().slice(0, 7);
 
   // Saldo = initialBalance semua wallet + semua income - semua expense (transfer tidak berpengaruh ke saldo total karena in=out)
   let totalBalance = 0;
@@ -1758,7 +1773,8 @@ function renderSummaryCards() {
 
 // Financial Health 50/30/20 Calculator
 function renderFinancialHealth() {
-  const currentMonthStr = new Date().toISOString().slice(0, 7);
+  if (!document.getElementById('healthScoreBadge')) return;
+  const currentMonthStr = localDateString().slice(0, 7);
 
   let income = (transactions || [])
     .filter(t => t.type === 'income' && t.date && t.date.startsWith(currentMonthStr))
@@ -1880,7 +1896,7 @@ window.openGoalDepositModal = function(id) {
   document.getElementById('depositGoalId').value = id;
   document.getElementById('depositAmountInput').value = '';
   document.getElementById('depositNoteInput').value = '';
-  document.getElementById('depositDateInput').value = new Date().toISOString().split('T')[0];
+  document.getElementById('depositDateInput').value = localDateString();
 
   const walletSelect = document.getElementById('depositWalletSelect');
   walletSelect.innerHTML = '';
@@ -1901,7 +1917,7 @@ window.openGoalWithdrawModal = function(id) {
   document.getElementById('withdrawGoalId').value = id;
   document.getElementById('withdrawAmountInput').value = '';
   document.getElementById('withdrawNoteInput').value = '';
-  document.getElementById('withdrawDateInput').value = new Date().toISOString().split('T')[0];
+  document.getElementById('withdrawDateInput').value = localDateString();
 
   const walletSelect = document.getElementById('withdrawWalletSelect');
   walletSelect.innerHTML = '';
@@ -1925,7 +1941,7 @@ window.openGoalHistoryModal = function(id) {
     goal.deposits = [{
       id: 'dep-init-' + goal.id,
       amount: goal.currentAmount,
-      date: new Date().toISOString().split('T')[0],
+      date: localDateString(),
       wallet: defaultWallet,
       note: 'Saldo Awal Terkumpul'
     }];
@@ -2097,7 +2113,7 @@ window.openDebtPayModal = function(id) {
 
   document.getElementById('payDebtId').value = id;
   document.getElementById('payAmountInput').value = '';
-  document.getElementById('payDateInput').value = new Date().toISOString().split('T')[0];
+  document.getElementById('payDateInput').value = localDateString();
 
   const walletSelect = document.getElementById('payWalletSelect');
   walletSelect.innerHTML = '';
@@ -2246,7 +2262,7 @@ window.executeRecurringNow = function(id) {
     if (!rec.history) rec.history = [];
 
     const execId = 'rec-exec-' + Date.now();
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = localDateString();
 
     rec.history.unshift({
       id: execId,
@@ -2377,6 +2393,9 @@ function createTxItemHTML(tx) {
     ? `<span class="tx-badge" style="background: rgba(99,102,241,0.15); color: #6366f1; border-color: rgba(99,102,241,0.3); font-weight: 700;">${isTransferIn ? '↓ Masuk' : '↑ Keluar'}</span>`
     : '';
 
+  const editBtn = isTransfer ? ''
+    : `<button type="button" class="btn-icon" onclick="window.openTxModalById('${tx.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>`;
+
   const receiptBtn = tx.receipt
     ? `<button type="button" class="btn-icon" onclick="window.viewReceiptPhoto('${tx.id}')" title="Lihat Foto Struk/Nota" style="color: #4285F4;"><i class="fa-solid fa-receipt"></i></button>`
     : '';
@@ -2447,9 +2466,9 @@ function renderTransactionsList() {
   const range = document.getElementById('dateRangeFilter') ? document.getElementById('dateRangeFilter').value : 'all';
 
   const now = new Date();
-  const currentMonthStr = now.toISOString().slice(0, 7);
+  const currentMonthStr = localDateString(now).slice(0, 7);
   const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthStr = lastMonthDate.toISOString().slice(0, 7);
+  const lastMonthStr = localDateString(lastMonthDate).slice(0, 7);
 
   const filtered = (transactions || []).filter(t => {
     if (type !== 'all' && t.type !== type) return false;
@@ -2477,7 +2496,7 @@ function renderTransactionsList() {
 
   filtered.forEach(t => {
     if (t.type === 'income') totalFilteredIncome += t.amount;
-    else totalFilteredExpense += t.amount;
+    else if (t.type === 'expense') totalFilteredExpense += t.amount;
   });
 
   const badge = document.getElementById('txCountBadge');
@@ -2507,7 +2526,7 @@ function renderTransactionsList() {
 function renderBudgetsView() {
   const container = document.getElementById('budgetGrid');
   const summaryPanel = document.getElementById('budgetSummaryPanel');
-  const currentMonthStr = new Date().toISOString().slice(0, 7);
+  const currentMonthStr = localDateString().slice(0, 7);
 
   if (!budgets || budgets.length === 0) {
     if (summaryPanel) summaryPanel.style.display = 'none';
@@ -2683,7 +2702,7 @@ window.openBudgetDetailModal = function(budgetId) {
   if (!budget) return;
 
   const cats = budget.categories || (budget.category ? [budget.category] : []);
-  const currentMonthStr = new Date().toISOString().slice(0, 7);
+  const currentMonthStr = localDateString().slice(0, 7);
 
   const catTxs = (transactions || []).filter(t => t.type === 'expense' && cats.includes(t.category) && t.date && t.date.startsWith(currentMonthStr));
   const totalSpent = catTxs.reduce((sum, t) => sum + t.amount, 0);
@@ -3012,7 +3031,7 @@ function openTransferModal(preselectedWalletName = null) {
     toSelect.value = wallets[1].name;
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDateString();
   const dateInput = document.getElementById('transferDateInput');
   if (dateInput) dateInput.value = today;
 
@@ -3046,7 +3065,7 @@ function handleTransferSubmit(e) {
   const fromName = document.getElementById('transferFromWallet').value;
   const toName = document.getElementById('transferToWallet').value;
   const amount = parseFormattedNumber(document.getElementById('transferAmountInput').value);
-  const dateStr = document.getElementById('transferDateInput').value || new Date().toISOString().split('T')[0];
+  const dateStr = document.getElementById('transferDateInput').value || localDateString();
   const noteStr = document.getElementById('transferNoteInput').value.trim();
 
   if (!fromName || !toName) { showToast('Pilih dompet asal dan tujuan.', 'warning'); return; }
@@ -3126,8 +3145,9 @@ function renderCharts() {
   const monthsMap = {};
   for (let i = 5; i >= 0; i--) {
     const d = new Date();
+    d.setDate(1);
     d.setMonth(d.getMonth() - i);
-    const key = d.toISOString().slice(0, 7);
+    const key = localDateString(d).slice(0, 7);
     const label = d.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
     monthsMap[key] = { label, income: 0, expense: 0 };
   }
@@ -3186,7 +3206,7 @@ function renderCharts() {
   });
 
   const categoryTotals = {};
-  const currentMonthStr = new Date().toISOString().slice(0, 7);
+  const currentMonthStr = localDateString().slice(0, 7);
 
   (transactions || [])
     .filter(t => t.type === 'expense' && t.date && t.date.startsWith(currentMonthStr))
@@ -3499,7 +3519,7 @@ function exportToCSV() {
   const encodedUri = encodeURI(csvContent);
   const link = document.createElement('a');
   link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `fintrack_catatan_keuangan_${new Date().toISOString().slice(0, 10)}.csv`);
+  link.setAttribute('download', `fintrack_catatan_keuangan_${localDateString()}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -3515,7 +3535,7 @@ function exportToJSON() {
 
   const a = document.createElement('a');
   a.href = url;
-  a.download = `fintrack_backup_${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `fintrack_backup_${localDateString()}.json`;
   a.click();
   URL.revokeObjectURL(url);
 
@@ -3532,9 +3552,14 @@ window.importFromJSON = function(e) {
     try {
       const data = JSON.parse(evt.target.result);
       let importedTxCount = 0;
+      const listKeys = ['transactions', 'transaksi', 'items', 'records', 'data', 'rows', 'laporan'];
+      const sourceList = Array.isArray(data) ? data : listKeys.map(key => data?.[key]).find(Array.isArray);
+      if (!sourceList || sourceList.some(item => !item || typeof item !== 'object' || Array.isArray(item))) {
+        throw new Error('Backup harus memuat daftar transaksi yang valid.');
+      }
 
       if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
-        if (Array.isArray(data.wallets) && data.wallets.length > 0) wallets = data.wallets;
+        if (Array.isArray(data.wallets)) wallets = data.wallets;
         if (Array.isArray(data.budgets)) budgets = data.budgets;
         if (data.categories && typeof data.categories === 'object') categories = data.categories;
         if (Array.isArray(data.savingsGoals)) savingsGoals = data.savingsGoals;
@@ -3561,15 +3586,19 @@ window.importFromJSON = function(e) {
 
       if (rawList !== null) {
         transactions = rawList.map((item, idx) => {
+          // Native backups already store IDR amounts and linked record metadata.
+          if (['income', 'expense', 'transfer_in', 'transfer_out'].includes(item.type) && typeof item.amount === 'number') {
+            return { ...item };
+          }
           const typeRaw = (item.type || item.tipe || item.jenis || '').toString().toLowerCase();
-          const isIncome = typeRaw.includes('inc') || typeRaw.includes('masuk') || typeRaw.includes('pemasukan') || (parseFormattedNumber(item.amount || item.nominal || item.jumlah || 0) > 0 && !typeRaw.includes('exp') && !typeRaw.includes('keluar'));
+          const isIncome = typeRaw.includes('inc') || typeRaw.includes('masuk') || typeRaw.includes('pemasukan') || (parseFormattedNumber(item.amount || item.nominal || item.jumlah || 0) > 0 && !typeRaw.includes('exp') && !typeRaw.includes('keluar') && !typeRaw.includes('pengeluaran'));
 
-          const amountVal = Math.abs(parseFormattedNumber(item.amount || item.nominal || item.jumlah || item.total || item.harga || item.value || 0)) || 0;
+          const amountVal = Math.abs(typeof item.amount === 'number' ? item.amount : parseFormattedNumber(item.amount || item.nominal || item.jumlah || item.total || item.harga || item.value || 0)) || 0;
           const categoryVal = item.category || item.kategori || item.kategori_utama || 'Lain-lain (Pengeluaran)';
           const subCatVal = item.subCategory || item.sub_kategori || item.subkategori || 'Umum';
           const walletVal = item.wallet || item.dompet || item.akun || item.metode || defaultWalletName;
           
-          let dateVal = item.date || item.tanggal || item.created_at || item.waktu || new Date().toISOString().split('T')[0];
+          let dateVal = item.date || item.tanggal || item.created_at || item.waktu || localDateString();
           if (typeof dateVal === 'string' && dateVal.includes('T')) dateVal = dateVal.split('T')[0];
 
           const noteVal = item.note || item.catatan || item.keterangan || item.deskripsi || item.title || item.nama || `Transaksi ${idx + 1}`;
@@ -3577,8 +3606,9 @@ window.importFromJSON = function(e) {
           const currVal = item.currency || 'IDR';
 
           return {
+            ...item,
             id: item.id || 'tx-imp-' + idx + '-' + Date.now(),
-            type: isIncome ? 'income' : 'expense',
+            type: ['income', 'expense', 'transfer_in', 'transfer_out'].includes(typeRaw) ? typeRaw : (isIncome ? 'income' : 'expense'),
             amount: amountVal,
             currency: currVal,
             category: categoryVal,
@@ -3689,7 +3719,7 @@ window.uploadToGoogleDrive = function() {
 
   const data = { transactions, wallets, budgets, categories, savingsGoals, debts, recurringTxs, exportDate: new Date().toISOString() };
   const jsonStr = JSON.stringify(data, null, 2);
-  const fileName = `fintrack_backup_${new Date().toISOString().slice(0, 10)}.json`;
+  const fileName = `fintrack_backup_${localDateString()}.json`;
 
   const metadata = {
     name: fileName,
@@ -3833,9 +3863,9 @@ window.generatePdfReport = function(e) {
   const includeTx = document.getElementById('pdfIncludeTransactions') ? document.getElementById('pdfIncludeTransactions').checked : true;
 
   const now = new Date();
-  const currentMonthStr = now.toISOString().slice(0, 7);
+  const currentMonthStr = localDateString(now).slice(0, 7);
   const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthStr = lastMonthDate.toISOString().slice(0, 7);
+  const lastMonthStr = localDateString(lastMonthDate).slice(0, 7);
 
   let periodLabel = 'Seluruh Histori Transaksi';
   if (range === 'this-month') periodLabel = now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
@@ -4146,7 +4176,7 @@ function renderNotifications() {
 
   // 3. Check Budget Alerts
   (budgets || []).forEach(b => {
-    const currentMonthStr = today.toISOString().slice(0, 7);
+    const currentMonthStr = localDateString(today).slice(0, 7);
     let spent = 0;
     const catList = Array.isArray(b.categories) ? b.categories : [b.category];
     (transactions || []).forEach(t => {
@@ -4211,7 +4241,7 @@ function renderCashflowStatement() {
   if (!container) return;
 
   const now = new Date();
-  const currentMonthStr = now.toISOString().slice(0, 7);
+  const currentMonthStr = localDateString(now).slice(0, 7);
   const currentYearStr = now.getFullYear().toString();
 
   let monthIncome = 0;
@@ -4335,10 +4365,10 @@ function renderSmartInsights() {
   if (!container) return;
 
   const now = new Date();
-  const currentMonthStr = now.toISOString().slice(0, 7);
+  const currentMonthStr = localDateString(now).slice(0, 7);
   
   const lastMonthObj = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthStr = lastMonthObj.toISOString().slice(0, 7);
+  const lastMonthStr = localDateString(lastMonthObj).slice(0, 7);
 
   let curIncome = 0, curExpense = 0;
   let lastExpense = 0;
