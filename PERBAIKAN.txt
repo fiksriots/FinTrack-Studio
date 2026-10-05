@@ -1,0 +1,55 @@
+CATATAN PERBAIKAN FINTRACK STUDIO — 5 Oktober 2026
+
+1. Daftar transaksi tampil kembali.
+   Variabel editBtn sebelumnya belum didefinisikan sehingga rendering dashboard
+   dan daftar transaksi berhenti. Tombol edit kini tersedia untuk transaksi biasa.
+
+2. Transfer antar dompet tetap berpasangan.
+   Menghapus salah satu sisi transfer kini menghapus sisi pasangannya juga.
+   Konfirmasi menjelaskan bahwa saldo kedua dompet dikembalikan. Transfer tidak
+   dibuka melalui editor pemasukan/pengeluaran; untuk mengubahnya, hapus pasangan
+   transfer lalu buat transfer baru.
+
+3. Restore JSON mempertahankan data transaksi asli.
+   Tipe transfer_in/transfer_out, linkedTransferId, metadata terkait, foto struk,
+   nominal angka, dan nilai kosong dipertahankan untuk transaksi backup asli.
+   Backup dengan daftar dompet kosong juga dipulihkan sebagai kosong.
+   JSON tanpa daftar transaksi atau dengan baris null ditolak sebelum state diubah.
+   Format lama pengeluaran kini dikenali sebagai expense, bukan income.
+
+4. Tanggal dan periode mengikuti zona waktu perangkat.
+   Tanggal default formulir, kalender, filter, anggaran, laporan, analitik, dan
+   nama backup menggunakan tanggal lokal. Waktu exportDate tetap timestamp UTC.
+   Grafik enam bulan dimulai dari tanggal 1 agar tidak melewati bulan pendek
+   saat perangkat berada pada tanggal 29–31.
+
+5. Cache aplikasi diperbarui ke v8.7.9.
+   Service worker memakai nama cache baru untuk versi perbaikan ini.
+
+6. Formulir dan halaman yang hilang dipulihkan.
+   Formulir transaksi, dompet, transfer, hutang, target, anggaran, kategori,
+   transaksi rutin, PDF, backup dan kontainer notifikasi dipulihkan dari HTML
+   sebelum redesign (parent commit 3d084b4), beserta gaya komponennya.
+   ID ringkasan saldo diselaraskan dengan JavaScript. Filter transaksi, kalender,
+   halaman dompet/anggaran/target/hutang/rutin/kategori, grafik laporan dan
+   backup disambungkan kembali. Event kalender dijalankan sekali per klik.
+   Dialog tersembunyi tidak masuk navigasi keyboard/aksesibilitas.
+   Indikator cloud yang selalu mengklaim aktif diganti akses ke backup.
+   Pemilih buku kas dihapus karena switchBook belum diimplementasikan;
+   pemisahan buku pribadi/bisnis belum didukung pada versi web ini.
+
+PENGUJIAN
+- node --check app.js
+- node --check service-worker.js
+- node --test tests/regressions.test.cjs: 9 pengujian lulus.
+- git diff --check
+- Browser lokal: dashboard menampilkan saldo; tombol tambah/edit membuka
+  formulir; pencarian menghasilkan satu transaksi yang sesuai; dompet dan
+  formulir transfer tampil. Tidak ada log warn/error baru setelah perbaikan.
+  agent-browser gagal menjalankan Chrome pada lingkungan ini; pemeriksaan
+  dilanjutkan dengan browser bawaan Codex.
+
+STATUS
+Perubahan disiapkan pada branch fix/transactions-backup-local-dates untuk
+pull request. Situs produksi berubah setelah perubahan digabung dan deployment
+selesai. Integrasi Google Drive/Firebase tidak diuji dengan akun pribadi.
